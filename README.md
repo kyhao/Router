@@ -7,10 +7,6 @@
 - Python版本：Pyhton3.6(CPython)
 - GCC版本：gcc version 6.3.0 20170516 (Raspbian 6.3.0-18+rpi1+deb9u1)
 
-## 使用的依赖包：
-
-- devspi
-
 ## 硬件平台
 
 - Raspberry Pi 3 Model B+
