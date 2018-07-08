@@ -11,8 +11,8 @@
 
 - Raspberry Pi 3 Model B+
 - W5500(HR911105A)
-- BC95-B5(mirco-PCIE) `mirco-PCIE to USB`
-- ME909s-821
+- BC95-B5
+- ME909s-821(mirco-PCIE) `mirco-PCIE to USB`
 - STC15W408 `Middleware`
 - ESP-01S
 - B
