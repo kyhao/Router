@@ -14,8 +14,9 @@
 ## 硬件平台
 
 - Raspberry Pi 3 Model B+
-- W5500`(HR911105A)`
-- BC95-B5
+- W5500(HR911105A)
+- BC95-B5(mirco-PCIE) `mirco-PCIE to USB`
 - ME909s-821
-- STC15W408
+- STC15W408 `Middleware`
 - ESP-01S
+- B
