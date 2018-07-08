@@ -15,4 +15,4 @@
 - ME909s-821(mirco-PCIE) `mirco-PCIE to USB`
 - STC15W408 `Middleware`
 - ESP-01S
-- B
+- SX1278
