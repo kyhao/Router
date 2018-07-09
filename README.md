@@ -3,7 +3,7 @@
 ## 系统环境
 
 - 系统：raspbian-stretch(Linux)
-- 内核版本：Linux raspberrypi 4.14.50-v7+ #1122 SMP Tue Jun 19 12:26:26 BST 2018 armv7l GNU/Linux`系统内核适配GPIO可在usr/class/gpio下查看`
+- 内核版本：Linux raspberrypi 4.14.50-v7+ #1122 SMP Tue Jun 19 12:26:26 BST 2018 armv7l GNU/Linux</br>`系统内核适配GPIO可在usr/class/gpio下查看`
 - Python版本：Pyhton3.6(CPython)
 - GCC版本：gcc version 6.3.0 20170516 (Raspbian 6.3.0-18+rpi1+deb9u1)
 
