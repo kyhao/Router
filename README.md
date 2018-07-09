@@ -19,14 +19,14 @@
 
 ## 文件介绍
 
-代码文件：
-t_xxx.xx文件为模块测试代码
-r_xxx.xx文件为正式代码
+代码文件：  
+t_xxx.xx文件为模块测试代码  
+r_xxx.xx文件为正式代码  
 
-文件夹结构：
-.
-+-- W5500
-|   +-- Ethernet
-|   +-- Internet
+文件夹结构：  
+.  
++-- W5500  
+|   +-- Ethernet  
+|   +-- Internet  
 
 W5500自带完整的协议栈，W5500文件夹为W5500驱动文件，分为Ethernet和Internet，Ethernet包含W5500驱动，socket控制，wizchip_conf通信配置。Internet包含DHCP和DNS控制。
