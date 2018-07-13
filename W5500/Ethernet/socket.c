@@ -3,12 +3,10 @@
 //! \file socket.c
 //! \brief SOCKET APIs Implements file.
 //! \details SOCKET APIs like as Berkeley Socket APIs. 
-//! \version 1.0.1
+//! \version 1.0.0.0
 //! \date 2013/10/21
 //! \par  Revision history
 //!       <2013/10/21> 1st Release
-//!       <2013/11/04> 2nd Release. Refer to "20131104".
-//!                    In sendto(), Add to clear timeout interrupt status (Sn_IR_TIMEOUT)
 //! \author MidnightCow
 //! \copyright
 //!
@@ -378,14 +376,7 @@ int32_t sendto(uint8_t sn, uint8_t * buf, uint16_t len, uint8_t * addr, uint16_t
          setSn_IR(sn, Sn_IR_SENDOK);
          break;
       }
-      //M:20131104
-      //else if(tmp & Sn_IR_TIMEOUT) return SOCKERR_TIMEOUT;
-      else if(tmp & Sn_IR_TIMEOUT)
-      {
-         setSn_IR(sn, Sn_IR_TIMEOUT);
-         return SOCKERR_TIMEOUT;
-      }
-      ////////////
+      else if(tmp & Sn_IR_TIMEOUT) return SOCKERR_TIMEOUT;
    }
 	return len;
 }

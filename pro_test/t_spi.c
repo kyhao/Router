@@ -19,6 +19,7 @@
 #include <sys/ioctl.h>
 #include <linux/types.h>
 #include <linux/spi/spidev.h>
+
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 static void pabort(const char *s)
 {
