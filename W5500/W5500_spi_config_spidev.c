@@ -2,6 +2,7 @@
  * SPI with W5500 
  * (using spidev driver)
  * (using W5500 driver)
+ * 缺失cs控制
  */
 #include <stdint.h>
 //#include <unistd.h>
