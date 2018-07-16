@@ -1,6 +1,6 @@
-# 开发版本v1.0（验证版）：
+# 开发版本v1.1（验证版）2018/7/16 ：
 
-## 系统环境
+## 1.系统环境
 
 - 系统：raspbian-stretch(Linux)
 - 内核版本：Linux raspberrypi 4.14.50-v7+ #1122 SMP Tue Jun 19 12:26:26 BST 2018 armv7l GNU/Linux</br>`系统内核适配GPIO可在 /sys/class/gpio 下查看`
@@ -12,24 +12,36 @@
 - wiringpi
 - wiringPiSPI
 
-## 硬件平台
+## 2.硬件平台
+
+主控：
 
 - Raspberry Pi 3 Model B+
-- W5500(HR911105A)
-- BC95-B5
-- ME909s-821(mirco-PCIE) `mirco-PCIE to USB`
-- STC15W408 `Middleware`
-- ESP-01S
-- SX1278
 
-## 文件介绍
+通信模块`数量8`：
+
+- W5500 * 2  `SPI`
+- AX88772 (暂定)  `USB`
+- BC95-B5 `UART`
+- ME909s-821(mirco-PCIE)  `mirco-PCIE to USB`
+- ESP-01S `UART`
+- SX1278 `SPI`
+- NRF52832 `UART`
+- MAX485 `UART`
+
+中间件：
+
+- ~~STC15W408~~ `UART <---> SPI`
+- CH340  `UART <---> USB`
+
+## 3.文件介绍
 
 代码文件：  
 t_xxx.xx文件为模块测试代码  
 r_xxx.xx文件为正式代码  
 h_xxx.xx文件为查询文件
 
-## W5500模块
+## 4.W5500模块
 
 文件夹结构：  
 .  
