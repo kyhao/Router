@@ -136,7 +136,7 @@ int set_opt(int fd, int nSpeed, int nBits, char nEvent, int nStop)
     else if (nStop == 2)
         newtio.c_cflag |= CSTOPB;
     // 设置等待时间和最小接收字符
-    newtio.c_cc[VTIME] = 1;
+    newtio.c_cc[VTIME] = 0;
     newtio.c_cc[VMIN] = 1;
     // 处理未接收字符
     tcflush(fd, TCIFLUSH);
@@ -147,5 +147,30 @@ int set_opt(int fd, int nSpeed, int nBits, char nEvent, int nStop)
         return -1;
     }
     printf("set done!\n");
+    return 0;
+}
+
+// 写串口
+// @param
+// @fd      文件描述符
+// @buf     写缓存
+// @count   写数据大小
+//
+int write_port(int fd, const void *buf, size_t count)
+{
+    write(fd, buf, count);
+    tcflush(fd, TCOFLUSH); // 刷新输出缓冲区
+    return 0;
+}
+
+// 读串口
+// @param
+// @fd      文件描述符
+// @buf     读缓存
+//
+int read_port(int fd, void *buf)
+{
+
+    tcflush(fd, TCIFLUSH); // 刷新输入缓冲区
     return 0;
 }
