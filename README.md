@@ -24,7 +24,7 @@
 - AX88772 (暂定)  `USB`
 - BC95-B5 `UART`
 - ME909s-821(mirco-PCIE)  `mirco-PCIE to USB`
-- ESP-01S `UART`
+- ESP8266-01S `UART` Station + AP
 - SX1278 `SPI`
 - NRF52832 `UART`
 - MAX485 `UART`
@@ -50,3 +50,31 @@ h_xxx.xx文件为查询文件
 |   +-- Internet  
 
 W5500自带完整的协议栈，W5500文件夹为W5500驱动文件，分为Ethernet和Internet，Ethernet包含W5500驱动，socket控制，wizchip_conf通信配置。Internet包含DHCP和DNS控制。
+
+## 5.ESP8226模块
+
+配置为AP AT命令：(注意结尾 '\r' '\n')
+AT+RST
+AT+CWMODE=2 `配置为AP模式` 1,2,3 三个模式
+AT+RST
+AT+CWSAP=<ssid>,<pwd>,<chi>,<ecn>
+指令只有在 AP模式开启后有效:
+<ssid>字符串参数，接入点名称（路由器发送的无线信号的名字）
+
+<pwd>字符串参数，密码最长 64 字节ASCII
+
+<chl>通道号 
+<ecn>
+0 OPEN;开放不加密
+1 WEP;加密
+2 WPA_PSK 
+3 WPA2_PSK 
+4 WPA_WPA2_PSK
+
+AT+RST
+
+AT+CIPMUX=1 启用多路连接
+
+AT+CIPSERVER=<mode>[,<port>] 配置为服务器
+
+AT+CIPSEND=<id>,<length> 作为服务器向 编号为id的设备
