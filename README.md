@@ -18,13 +18,20 @@
 
 - Raspberry Pi 3 Model B+
 
-通信模块`数量8`：
+通信模块：
 
-- W5500 * 2  `SPI`
-- AX88772 (暂定)  `USB`
-- BC95-B5 `UART`
-- ME909s-821(mirco-PCIE)  `mirco-PCIE to USB`
-- ESP8266-01S `UART` Station + AP
+外网：
+
+- AX88772 (暂定)  `USB` 
+- RTL8211E `UART` `系统驱动`
+- ME909s-821  `mirco-PCIE` `系统驱动`
+- BC95-B5 `UART` `单向`
+- ESP8266-01S `UART` `Station模式`
+
+内网：
+
+- W5500  `SPI`
+- ESP8266-01S `UART` `AP模式`
 - SX1278 `SPI`
 - NRF52832 `UART`
 - MAX485 `UART`
@@ -32,7 +39,8 @@
 中间件：
 
 - ~~STC15W408~~ `UART <---> SPI`
-- CH340  `UART <---> USB`
+- CH340  `UART <---> USB` `系统驱动`
+- mirco-PCIE转USB转接板 `mirco-PCIE <---> USB`
 
 ## 3.文件介绍
 
