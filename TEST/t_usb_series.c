@@ -1,5 +1,5 @@
 //
-// USB串口控制 2018/7/17
+// 通用USB串口控制 2018/7/17
 //
 #include <stdio.h>
 #include <string.h>
@@ -14,27 +14,23 @@
 //
 int open_port(int comport)
 {
-    int fd;
-    char *dev[] = {"/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2"};
-    // 串口选择
-    if (comport == 1) //串口1
+    // 控制不超过10个串口 编号0-9
+    if (comport > 9)
     {
-        fd = open("/dev/ttyUSB0", O_RDWR | O_NOCTTY | O_NDELAY);
-        if (-1 == fd)
-        {
-            perror("Can't Open Serial Port");
-            return (-1);
-        }
+        printf("Too many port");
+        return (-1);
     }
-    else if (comport == 2) //串口2
-    {
-        fd = open("/dev/ttyUSB1", O_RDWR | O_NOCTTY);
+    int fd;
+    char dev[] = "/dev/ttyUSB0";
 
-        if (-1 == fd)
-        {
-            perror("Can't Open Serial Port");
-            return (-1);
-        }
+    // 串口选择
+    dev[11] = (int)(comport + 48);
+    printf("%s", dev);
+    fd = open(dev, O_RDWR | O_NOCTTY | O_NDELAY);
+    if (-1 == fd)
+    {
+        perror("Can't Open Serial Port");
+        return (-1);
     }
 
     // 恢复串口为阻塞状态
@@ -157,17 +153,56 @@ int main()
 {
     int fd, ret;
     char TX_buf[8] = {'A', 'T', '+', 'R', 'S', 'T', '\r', '\n'};
+    char RST[] = "AT+RST\r\n";
+    char CWMODE[] = "AT+CWMODE=2\r\n";
+    char CWSAP[] = "AT+CWSAP=\"ESP8266TEST\",\"12345678\",1,3\r\n";
+    char CIPMUX[] = "AT+CIPMUX=1\r\n";
+    char CIPSERVER[] = "AT+CIPSERVER=1,8080\r\n";
+
     char RX_buf[100];
-    fd = open_port(1); // 打开USBCOM1
+    fd = open_port(0); // 打开USBCOM1
     if (fd != -1)
     {
         set_opt(fd, 115200, 8, 'n', 1);
         //read(fd, buf, 8);
         printf("%s", TX_buf);
-        write(fd, TX_buf, 8);
+        write(fd, RST, 8);
+        sleep(1);
+        tcflush(fd, TCIOFLUSH); // 刷新输入输出缓冲区
+        write(fd, CWMODE, 13);
+        tcflush(fd, TCIOFLUSH); // 刷新输入输出缓冲区
+        sleep(1);
+        write(fd, RST, 8);
+        tcflush(fd, TCIOFLUSH); // 刷新输入输出缓冲区
+        sleep(1);
+        write(fd, CWSAP, 43);
+        tcflush(fd, TCIOFLUSH); // 刷新输入输出缓冲区
+        sleep(1);
+        write(fd, RST, 8);
+        tcflush(fd, TCIOFLUSH); // 刷新输入输出缓冲区
+        sleep(1);
+        write(fd, CIPMUX, 13);
+        tcflush(fd, TCIOFLUSH); // 刷新输入输出缓冲区
+        sleep(1);
+        // write(fd, RST, 8);
+        // tcflush(fd, TCIOFLUSH); // 刷新输入输出缓冲区
+        // sleep(1);
+        write(fd, CIPSERVER, 21);
+        //tcflush(fd, TCIOFLUSH); // 刷新输入输出缓冲区
+        sleep(1);
+        //write(fd, TX_buf, 8);
+        sleep(1);
         //sleep(3);
         ret = read(fd, RX_buf, 100);
         printf("\n%d\n", ret);
+
+        while (1)
+        {
+            read(fd, RX_buf, 100);
+            printf("\n%s\n", RX_buf);
+            tcflush(fd, TCIOFLUSH); // 刷新输入输出缓冲区
+        }
+
         if (ret == -1)
             printf("read error");
         printf("\n%s", RX_buf);
