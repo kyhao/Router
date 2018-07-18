@@ -1,10 +1,10 @@
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <termios.h>
-
 #include "usbctl.h"
+
+#define Conn(x,y) x##y
+#define ToChar(x) #@x
+#define ToString(x) #x
+
+#define AT
 
 // esp8266 配置为热点模式
 // 设备开启多连接 服务器模式 
@@ -37,28 +37,5 @@ int esp8266_config(int fd)
     sleep(1);
     write_port(fd, CIPSERVER, 21);
 
-    return 0;
-}
-
-int main()
-{
-    int fd, ret;
-    char RX_buf[100];
-    fd = open_port(0); // 打开USBCOM0
-    if (fd != -1)
-    {
-        esp8266_config(fd);
-        while (1)
-        {
-            bzero(&RX_buf, sizeof(RX_buf));
-            ret = read(fd, RX_buf, 100);
-            if (ret == -1)
-                printf("read error");
-            printf("\n%s\n", RX_buf);
-            tcflush(fd, TCIFLUSH); // 刷新输入输出缓冲区
-        }
-
-        close(fd);
-    }
     return 0;
 }
