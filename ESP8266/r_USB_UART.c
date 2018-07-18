@@ -155,7 +155,7 @@ int main()
     char TX_buf[8] = {'A', 'T', '+', 'R', 'S', 'T', '\r', '\n'};
     char RST[] = "AT+RST\r\n";
     char CWMODE[] = "AT+CWMODE=2\r\n";
-    char CWSAP[] = "AT+CWSAP=\"ESP8266_HU_TEST\",\"12345678\",1,3\r\n";
+    char CWSAP[] = "AT+CWSAP=\"ESP8266TEST\",\"12345678\",1,3\r\n";
     char CIPMUX[] = "AT+CIPMUX=1\r\n";
     char CIPSERVER[] = "AT+CIPSERVER=1,8080\r\n";
 
