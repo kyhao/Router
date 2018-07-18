@@ -1,14 +1,17 @@
 #include "usbctl.h"
 
-#define Conn(x,y) x##y
-#define ToChar(x) #@x
+#define Conn(x, y) x##y
+#define ToChar(x) #@ x
 #define ToString(x) #x
 
-#define AT
+#define AT "AT"
+#define AT_RST "AT_RST"
+#define AT_CWMODE(mode) "AT+CWMODE="##mode##"\r\n"
+#define SERVERPORT 8080
 
 // esp8266 配置为热点模式
-// 设备开启多连接 服务器模式 
-// 热点名称 “ESP8266TEST” 密码“12345678” 
+// 设备开启多连接 服务器模式
+// 热点名称 “ESP8266TEST” 密码“12345678”
 // @param
 // @fd 文件描述符
 //
