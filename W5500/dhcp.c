@@ -5,7 +5,7 @@ File Include Section
 */
 #include <stdio.h>
 #include <string.h>
-#include "/home/pi/coding/W5500/Ethernet/socket.h"
+#include "socket.h"
 #include "dhcp.h"
 
 /*

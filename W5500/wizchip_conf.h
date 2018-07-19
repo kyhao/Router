@@ -111,7 +111,7 @@
  */
    //#define _WIZCHIP_IO_MODE_           _WIZCHIP_IO_MODE_SPI_FDM_
    #define _WIZCHIP_IO_MODE_           _WIZCHIP_IO_MODE_SPI_VDM_
-   #include "W5500/w5500.h"
+   #include "w5500.h"
 #else 
    #error "Unknown defined _WIZCHIP_. You should define one of 5100, 5200, and 5500 !!!"
 #endif
