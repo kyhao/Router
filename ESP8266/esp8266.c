@@ -4,9 +4,9 @@
 #define ToChar(x) #@ x
 #define ToString(x) #x
 
-#define AT "AT"
-#define AT_RST "AT_RST"
-#define AT_CWMODE(mode) "AT+CWMODE="##mode##"\r\n"
+#define AT #AT
+#define AT_RST #AT_RST
+#define AT_CWMODE(mode) ToString(AT+CWMODE=##mode##\r\n)
 #define SERVERPORT 8080
 
 // esp8266 配置为热点模式

@@ -26,7 +26,7 @@ int open_port(int comport)
 
     // 串口选择
     dev[11] = (int)(comport + 48);
-    printf("%s", dev);
+    //printf("%s", dev);
     fd = open(dev, O_RDWR | O_NOCTTY | O_NDELAY);
     if (-1 == fd)
     {
@@ -158,9 +158,10 @@ int set_opt(int fd, int nSpeed, int nBits, char nEvent, int nStop)
 //
 int write_port(int fd, const void *buf, size_t count)
 {
-    write(fd, buf, count);
+    int ret;
+    ret = write(fd, buf, count);
     tcflush(fd, TCOFLUSH); // 刷新输出缓冲区
-    return 0;
+    return ret;
 }
 
 // 读串口
@@ -168,9 +169,10 @@ int write_port(int fd, const void *buf, size_t count)
 // @fd      文件描述符
 // @buf     读缓存
 //
-int read_port(int fd, void *buf)
+int read_port(int fd, void *buf, size_t count)
 {
-
+    int ret;
+    ret = read(fd, buf, count);
     tcflush(fd, TCIFLUSH); // 刷新输入缓冲区
-    return 0;
+    return ret;
 }
