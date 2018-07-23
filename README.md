@@ -39,7 +39,7 @@
 中间件：
 
 - ~~STC15W408~~ `UART <---> SPI`
-- CH340  `UART <---> USB` `系统驱动`
+- CH340  `UART <---> USB` `系统驱动` `系统UART接口不足`
 - mirco-PCIE转USB转接板 `mirco-PCIE <---> USB`
 
 ## 3.文件介绍
@@ -86,3 +86,14 @@ AT+CIPMUX=1 启用多路连接
 AT+CIPSERVER=<mode>[,<port>] 配置为服务器
 
 AT+CIPSEND=<id>,<length> 作为服务器向 编号为id的设备
+
+
+
+## 模块监控模式
+
+
+
+对com端口连接测试，测试通过则下一步。
+
+采用epoll/select方式监测文件描述符。
+
