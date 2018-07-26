@@ -1,4 +1,4 @@
-# 开发版本v1.1（验证版）2018/7/16 ：
+# 开发版本v1.2（验证版）2018/7/25 ：
 
 ## 1.系统环境
 
@@ -9,8 +9,7 @@
 
 ### 依赖库
 
-- wiringpi
-- wiringPiSPI
+- spidev
 
 ## 2.硬件平台
 
@@ -22,11 +21,11 @@
 
 外网：
 
-- AX88772 (暂定)  `USB` 
-- RTL8211E `UART` `系统驱动`
+- RTL8211E `板载系统驱动`
+- AP6212 `板载系统驱动`
 - ME909s-821  `mirco-PCIE` `系统驱动`
 - BC95-B5 `UART` `单向`
-- ESP8266-01S `UART` `Station模式`
+- ~~AX88772`USB` `网卡`~~  
 
 内网：
 
@@ -34,13 +33,13 @@
 - ESP8266-01S `UART` `AP模式`
 - SX1278 `SPI`
 - NRF52832 `UART`
-- MAX485 `UART`
+- MAX485 `UART` `临时添加`
 
 中间件：
 
-- ~~STC15W408~~ `UART <---> SPI`
 - CH340  `UART <---> USB` `系统驱动` `系统UART接口不足`
 - mirco-PCIE转USB转接板 `mirco-PCIE <---> USB`
+- ~~STC15W408 `UART <---> SPI`~~  
 
 ## 3.文件介绍
 
@@ -87,13 +86,8 @@ AT+CIPSERVER=<mode>[,<port>] 配置为服务器
 
 AT+CIPSEND=<id>,<length> 作为服务器向 编号为id的设备
 
-
-
 ## 模块监控模式
-
-
 
 对com端口连接测试，测试通过则下一步。
 
 采用epoll/select方式监测文件描述符。
-

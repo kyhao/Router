@@ -1,4 +1,5 @@
 #include "usbctl.h"
+#include "esp8266.h"
 
 #define Conn(x, y) x##y
 #define ToChar(x) #@ x
@@ -6,7 +7,7 @@
 
 #define AT #AT
 #define AT_RST #AT_RST
-#define AT_CWMODE(mode) ToString(AT+CWMODE=##mode##\r\n)
+#define AT_CWMODE(mode) ToString(AT + CWMODE = ##mode##\r\n)
 #define SERVERPORT 8080
 
 // esp8266 配置为热点模式

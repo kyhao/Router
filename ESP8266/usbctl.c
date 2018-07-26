@@ -10,22 +10,21 @@
 
 //  打开端口/串口 阻塞方式
 //  @param
-//  @comport    想要打开的串口号
+//  @comport    想要打开的串口号 串口不超过9
 //  @return     返回 -1 为打开失败
 //
 int open_port(int comport)
 {
-    // 控制不超过10个串口 编号0-9
+    int fd;
     if (comport > 9)
     {
         printf("Too many port");
         return (-1);
     }
-    int fd;
     char dev[] = "/dev/ttyUSB0";
-
     // 串口选择
     dev[11] = (int)(comport + 48);
+
     //printf("%s", dev);
     fd = open(dev, O_RDWR | O_NOCTTY | O_NDELAY);
     if (-1 == fd)
@@ -160,6 +159,8 @@ int write_port(int fd, const void *buf, size_t count)
 {
     int ret;
     ret = write(fd, buf, count);
+    if (ret < 0)
+        return ret;
     tcflush(fd, TCOFLUSH); // 刷新输出缓冲区
     return ret;
 }
@@ -168,11 +169,14 @@ int write_port(int fd, const void *buf, size_t count)
 // @param
 // @fd      文件描述符
 // @buf     读缓存
+// @count   读数据大小
 //
 int read_port(int fd, void *buf, size_t count)
 {
     int ret;
     ret = read(fd, buf, count);
+    if (ret < 0)
+        return ret;
     tcflush(fd, TCIFLUSH); // 刷新输入缓冲区
     return ret;
 }

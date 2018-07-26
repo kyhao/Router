@@ -7,8 +7,8 @@
 #include "usbctl.h"
 
 // esp8266 配置为热点模式
-// 设备开启多连接 服务器模式 
-// 热点名称 “ESP8266TEST” 密码“12345678” 
+// 设备开启多连接 服务器模式
+// 热点名称 “ESP8266TEST” 密码“12345678”
 // @param
 // @fd 文件描述符
 //
@@ -57,7 +57,7 @@ int main()
             printf("\n%s\n", RX_buf);
             tcflush(fd, TCIFLUSH); // 刷新输入输出缓冲区
         }
-        
+
         close(fd);
     }
     return 0;
