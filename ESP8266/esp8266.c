@@ -1,8 +1,11 @@
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <termios.h>
 #include "usbctl.h"
 #include "esp8266.h"
 
-#define Conn(x, y) x##y
-#define ToChar(x) #@ x
 #define ToString(x) #x
 
 #define AT #AT
@@ -18,7 +21,7 @@
 //
 int esp8266_config(int fd)
 {
-    char TX_buf[8] = {'A', 'T', '+', 'R', 'S', 'T', '\r', '\n'};
+    //char TX_buf[8] = {'A', 'T', '+', 'R', 'S', 'T', '\r', '\n'};
     char RST[] = "AT+RST\r\n";
     char CWMODE[] = "AT+CWMODE=2\r\n";
     char CWSAP[] = "AT+CWSAP=\"ESP8266TEST\",\"12345678\",1,3\r\n";
