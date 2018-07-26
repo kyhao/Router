@@ -25,7 +25,6 @@ int open_port(int comport)
     // 串口选择
     dev[11] = (int)(comport + 48);
 
-    //printf("%s", dev);
     fd = open(dev, O_RDWR | O_NOCTTY | O_NDELAY);
     if (-1 == fd)
     {

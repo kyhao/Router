@@ -57,7 +57,6 @@ int main()
             printf("\n%s\n", RX_buf);
             tcflush(fd, TCIFLUSH); // 刷新输入输出缓冲区
         }
-
         close(fd);
     }
     return 0;

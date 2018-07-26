@@ -1,3 +1,4 @@
+#esp8266makefile
 CC = gcc
 
 all : run clean
