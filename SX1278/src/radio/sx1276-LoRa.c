@@ -250,7 +250,7 @@ void SX1276LoRaSetOpMode( uint8_t opMode )
         if( antennaSwitchTxOn != antennaSwitchTxOnPrev )
         {
             antennaSwitchTxOnPrev = antennaSwitchTxOn;
-            RXTX( antennaSwitchTxOn ); // Antenna switch control
+            // RXTX( antennaSwitchTxOn ); // Antenna switch control
         }
         SX1276LR->RegOpMode = ( SX1276LR->RegOpMode & RFLR_OPMODE_MASK ) | opMode;
 
