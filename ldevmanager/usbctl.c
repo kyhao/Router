@@ -135,7 +135,7 @@ int set_opt(int fd, int nSpeed, int nBits, char nEvent, int nStop)
         newtio.c_cflag |= CSTOPB;
     // 设置等待时间和最小接收字符
     newtio.c_cc[VTIME] = 0;
-    newtio.c_cc[VMIN] = 1;
+    newtio.c_cc[VMIN] = 0;
     // 处理未接收字符
     tcflush(fd, TCIFLUSH);
     // 激活新配置
@@ -152,15 +152,14 @@ int set_opt(int fd, int nSpeed, int nBits, char nEvent, int nStop)
 // @param
 // @fd      文件描述符
 // @buf     写缓存
-// @count   写数据大小
+// @len   写数据大小
 //
-int write_port(int fd, const void *buf, size_t count)
+int write_port(int fd, const void *buf, size_t len)
 {
     int ret;
-    ret = write(fd, buf, count);
+    ret = write(fd, buf, len);
     if (ret < 0)
         return ret;
-    tcflush(fd, TCOFLUSH); // 刷新输出缓冲区
     return ret;
 }
 
@@ -168,14 +167,29 @@ int write_port(int fd, const void *buf, size_t count)
 // @param
 // @fd      文件描述符
 // @buf     读缓存
-// @count   读数据大小
+// @len   读数据大小
 //
-int read_port(int fd, void *buf, size_t count)
+int read_port(int fd, void *buf, size_t len)
 {
     int ret;
-    ret = read(fd, buf, count);
+    ret = read(fd, buf, len);
     if (ret < 0)
         return ret;
-    tcflush(fd, TCIFLUSH); // 刷新输入缓冲区
+    tcflush(fd, TCIFLUSH);
     return ret;
+}
+
+// 读后写
+// @param
+//  
+int write_read(int fd, void *wbuf, size_t wlen, void *rbuf, size_t rlen)
+{
+    int ret;
+    ret = write(fd, wbuf, wlen);
+    if (ret < 0)
+        return ret;
+    ret = read(fd, rbuf, rlen);
+    if (ret < 0)
+        return ret;
+    return 0;
 }

@@ -1,6 +1,18 @@
 {
     "files.associations": {
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "stdint.h": "c",
+        "sx1276-lora.h": "c",
+        "istream": "cpp",
+        "sx1276-hal.h": "c",
+        "xiosbase": "c",
+        "xlocale": "c",
+        "local_protocol.h": "c",
+        "initializer_list": "c",
+        "xstring": "c",
+        "xutility": "c",
+        "xlocnum": "cpp"
     },
-    "files.autoSave": "afterDelay"
+    "files.autoSave": "afterDelay",
+    "C_Cpp.errorSquiggles": "Disabled"
 }
