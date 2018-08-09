@@ -7,11 +7,13 @@
 
 #include "usbctl.h"
 #include "esp8266.h"
+#include "mac.h"
 
 int main()
 {
     int fd, ret;
     char RX_buf[100];
+    char mac[32];
 
     fd = esp8266_open();
     if (-1 == fd)
@@ -25,6 +27,8 @@ int main()
     fd_set fdset;
 
     esp8266_config(fd); // esp8266_配置
+
+    get_mac(mac);
 
     while (1)
     {

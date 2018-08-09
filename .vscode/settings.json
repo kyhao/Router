@@ -11,7 +11,8 @@
         "initializer_list": "c",
         "xstring": "c",
         "xutility": "c",
-        "xlocnum": "cpp"
+        "xlocnum": "cpp",
+        "mac.h": "c"
     },
     "files.autoSave": "afterDelay",
     "C_Cpp.errorSquiggles": "Disabled"
