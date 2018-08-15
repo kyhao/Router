@@ -61,7 +61,7 @@ int lprotocol_decode(uint8_t *inbuf, Packet *outbuf)
     switch (ver)
     {
     case LPROTOCOL_VER1:
-        lprotocol_decode_v1(inbuf, outbuf);
+        return lprotocol_decode_v1(inbuf, outbuf);
         break;
     default:
         return 3;

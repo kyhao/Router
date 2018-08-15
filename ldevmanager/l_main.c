@@ -101,8 +101,8 @@ int main(int argc, char **argv)
     wifi_rdsta = FIND_START;
     bt_rdsta = FIND_START;
 
-    int wifi_cal[] = {0, 0};
-    int bt_cal[] = {0, 0};
+    int wifi_cal[] = {0, 0}; // DEBUG:
+    int bt_cal[] = {0, 0};   // DEBUG:
     // 设备正常 通信监听开始
     printf("InitFinished:Start->>>>>%d %d \n", fd_wifi, fd_bt);
     while (1)
