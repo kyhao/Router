@@ -1,8 +1,11 @@
+// 2018/8/15
+// 消息控制
 #include <stdio.h>
 #include <sys/select.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include "localProtocol.h"
+// #include "localProtocol.h"
+#include "linfoctl.h"
 
 #define PIPE_NUM 2  // 管道数量
 #define RX_SIZE 128 // 接受缓存大小

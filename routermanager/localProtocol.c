@@ -5,6 +5,7 @@
 // Packet结构体保存 数据协议内容
 // 协议字符串 与 可处理的结构体 相互转换
 // 数据部分长度可调 更改头文件中 MAX_DATALEN
+// TODO: 加密数据 
 #include <stdio.h>
 #include "localProtocol.h"
 
@@ -13,6 +14,8 @@
 
 // 本地协议起始标识位
 #define LPROTOCOL_START 0xFF
+#define LPROTOCOL_END_0 0x0D
+#define LPROTOCOL_END_1 0x0A
 
 // 本地协议版本/起始标识位 字段 位置
 #define LPROTOCOL_START_POS 0
@@ -24,7 +27,7 @@
 #define LPROTOCOL_VER3 3
 
 // 本地协议头部大小(字节)
-#define LPROTOCOL_VER1_HEADER_SIZE 28
+#define LPROTOCOL_VER1_HEADER_SIZE 9
 
 // 本地协议版本1 字段位置
 #define LPROTOCOL_VER1_HEADER_START LPROTOCOL_START_POS
@@ -84,7 +87,7 @@ int lprotocol_package(Packet *inbuf, uint8_t *outbuf, int *len, int ver)
     {
     case LPROTOCOL_VER1:
         lprotocol_package_v1(inbuf, outbuf);
-        *len = inbuf->header.datalen + LPROTOCOL_VER1_HEADER_SIZE;
+        *len = inbuf->header.datalen + LPROTOCOL_VER1_HEADER_SIZE + 2;
         break;
     default:
         return 3;
@@ -124,7 +127,11 @@ int lprotocol_decode_v1(uint8_t *inbuf, Packet *outbuf)
     {
         ARRAY_CHA(outbuf->data, i) = ARRAY_CHA(inbuf, cur);
     }
-
+    // 检查结尾标识字节
+    if (ARRAY_CHA(inbuf, cur) != LPROTOCOL_END_0 || ARRAY_CHA(inbuf, cur + 1) != LPROTOCOL_END_1)
+    {
+        return -1;
+    }
     return 0;
 }
 
@@ -162,6 +169,9 @@ int lprotocol_package_v1(Packet *inbuf, uint8_t *outbuf)
     {
         ARRAY_CHA(outbuf, cur) = ARRAY_CHA(inbuf->data, i);
     }
+    // 添加结尾标识字节
+    ARRAY_CHA(outbuf, cur++) = LPROTOCOL_END_0;
+    ARRAY_CHA(outbuf, cur) = LPROTOCOL_END_1;
 
     return 0;
 }
