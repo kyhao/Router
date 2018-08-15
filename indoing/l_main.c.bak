@@ -1,0 +1,252 @@
+// main test
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <termios.h>
+#include <sys/select.h>
+
+#include "usbctl.h"
+#include "esp8266.h"
+#include "bluetooth.h"
+#include "mac.h"
+
+#define DEBUG 1        // 是否开启Debug模式 0 关闭 1 开启
+#define RX_SIZE 33     // 接收缓存大小 33为最适大小
+#define PACKET_LEN 255 // 协议包长度
+
+#define PACKAGE_START 0xFF // 协议包其实字节位
+#define PACKAGE_END_0 0x0D // 协议包终止字节位0
+#define PACKAGE_END_1 0x0A //协议包终止字节位1
+
+// 数据接收状态模式标识位
+#define FIND_START 0
+#define FIND_DATA 1
+#define FIND_END 2
+
+// 1.请求注册
+// 2.心跳请求
+// 3.数据请求
+char cmd[] = "AT+CIPSEND=0,30\r\n";
+char heart_cmd[] = {0xFF, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x39, 0x00, 0x30, 0x00, 0x09, 0x50, 0x33, 0x42, 0x58, 0x35, 0x31, 0x20, 0x03, 0x00, 0x0D, 0x0A};
+char reg_cmd[] = {0xFF, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x0D, 0x0A};
+char getdata_cmd[] = {0xFF, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x39, 0x00, 0x30, 0x00, 0x09, 0x50, 0x33, 0x42, 0x58, 0x35, 0x31, 0x20, 0x05, 0x00, 0x0D, 0x0A};
+char heart1_cmd[] = {0xFF, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x41, 0x00, 0x43, 0x00, 0x09, 0x50, 0x33, 0x42, 0x58, 0x35, 0x31, 0x20, 0x03, 0x00, 0x0D, 0x0A};
+char getdata1_cmd[] = {0xFF, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x41, 0x00, 0x43, 0x00, 0x09, 0x50, 0x33, 0x42, 0x58, 0x35, 0x31, 0x20, 0x05, 0x00, 0x0D, 0x0A};
+
+int read_print(int fd, char *RX_buf, int len)
+{
+    int i, ret;
+    // 获取esp8266数据
+    ret = read(fd, RX_buf, len);
+    if (ret == -1)
+        printf("->> read error");
+    printf("\033[31m******DATA_Start******\033[0m:\nfd:%d\nRet:%d\n", fd, ret);
+    printf("String:->%s\n", RX_buf);
+    printf("HEX:->");
+    for (i = 0; i < ret; i++)
+    {
+        printf("%02X ", RX_buf[i]);
+    }
+    printf("\n\033[31m******DATA_End******\033[0m\n");
+    bzero(RX_buf, ret);
+    return 0;
+}
+
+int main()
+{
+    // struct timeval timeout;                       // 超时配置
+    fd_set fdset;                              // select 数组
+    int fd_wifi, fd_bt, fd_lora, fd_nb; // wifi,蓝牙,lora,nb,设备描述符
+    int ret;                                   // 错误参数保存/临时变量 使用必须注意
+    char RX_buf[RX_SIZE];                      // 接收缓存
+    char mac[32];                              // 网卡mac地址
+
+    int i; // 用于函数内部for循环，使用前注意初始化。减少内存申请释放次数
+
+    get_mac(mac);
+    printf("%s\n", mac);
+
+    // esp8266 WIFI设备选择
+    fd_wifi = esp8266_open();
+    if (-1 == fd_wifi)
+    {
+        printf("->> No esp8266 devcie\n");
+        return -1;
+    }
+    else
+    {
+        esp8266_config(fd_wifi); // 成功打开esp8266后配置
+    }
+    // bluetooth设备选择
+    fd_bt = bluetooth_open();
+    if (-1 == fd_bt)
+    {
+        printf("->> No bluetooth devcie\n");
+        // return -1;
+    }
+
+    // 若设备无法检测与选择则退出
+    if (-1 == fd_wifi && -1 == fd_bt)
+        return -1;
+
+    char wifi_buf[PACKET_LEN], bt_buf[PACKET_LEN]; // 存放完整协议包
+    int wifi_rdsta, bt_rdsta;                      // 设备读取数据状态
+    int wifi_rd_pos, bt_rd_pos;                    // 数据协议接收游标
+    int fd_max;
+    wifi_rd_pos = 0;
+    bt_rd_pos = 0;
+    wifi_rdsta = FIND_START;
+    bt_rdsta = FIND_START;
+
+    // 设备正常 通信监听开始
+    printf("InitFinished:Start->>>>>\n");
+
+    while (1)
+    {
+        FD_ZERO(&fdset);
+        FD_SET(0, &fdset);
+        FD_SET(fd_wifi, &fdset);
+        FD_SET(fd_bt, &fdset);
+        fd_max = fd_wifi > fd_bt ? fd_wifi : fd_bt;
+        ret = select(fd_max + 1, &fdset, NULL, NULL, NULL);
+        if (ret > 0)
+        {
+            if (FD_ISSET(fd_wifi, &fdset)) // wifi设备读响应
+            {
+                // 获取esp8266数据
+                // 串口通讯存在分包问题，故进行协议提取与组包操作，测试：10000个包错误200。
+                ret = read(fd_wifi, RX_buf, RX_SIZE);
+                for (i = 0; i < ret; i++)
+                {
+                    switch (wifi_rdsta)
+                    {
+                    case FIND_START:
+                        if (RX_buf[i] == PACKAGE_START) // 判断起始位，发现起始为切换模式
+                        {
+                            wifi_rdsta = FIND_DATA;
+                            wifi_buf[wifi_rd_pos] = PACKAGE_START;
+                            wifi_rd_pos++;
+                        }
+                        break;
+                    case FIND_DATA:
+                        if (RX_buf[i] == PACKAGE_END_0) // 发现第一个停止位，切换模式
+                        {
+                            wifi_rdsta = FIND_END;
+                        }
+                        wifi_buf[wifi_rd_pos] = RX_buf[i];
+                        wifi_rd_pos++;
+                        break;
+                    case FIND_END:
+                        if (RX_buf[i] == PACKAGE_END_1) // 判断第二个停止位，若第二停止位判断成功，则协议结束。重置接收数据缓存区游标
+                        {
+                            wifi_rdsta = FIND_START;
+                            wifi_buf[wifi_rd_pos] = RX_buf[i];
+                            wifi_rd_pos = 0;
+                            // TODO: 数据协议包的传输与解析
+                        }
+                        else // 若不为结束位 则返回数据接收模式
+                        {
+                            wifi_rdsta = FIND_DATA;
+                            wifi_buf[wifi_rd_pos] = RX_buf[i];
+                            wifi_rd_pos++;
+                        }
+                        break;
+                    default:
+                        wifi_rdsta = FIND_START;
+                    }
+                }
+            }
+            else if (FD_ISSET(fd_bt, &fdset)) // BT设备读响应
+            {
+                // 获取BT数据
+                // 串口通讯存在分包问题，故进行协议提取与组包操作，测试：TODO:。
+                ret = read(fd_bt, RX_buf, RX_SIZE);
+                for (i = 0; i < ret; i++)
+                {
+                    switch (bt_rdsta)
+                    {
+                    case FIND_START:
+                        if (RX_buf[i] == PACKAGE_START) // 判断起始位，发现起始为切换模式
+                        {
+                            bt_rdsta = FIND_DATA;
+                            bt_buf[bt_rd_pos] = PACKAGE_START;
+                            bt_rd_pos++;
+                        }
+                        break;
+                    case FIND_DATA:
+                        if (RX_buf[i] == PACKAGE_END_0) // 发现第一个停止位，切换模式
+                        {
+                            bt_rdsta = FIND_END;
+                        }
+                        bt_buf[bt_rd_pos] = RX_buf[i];
+                        bt_rd_pos++;
+                        break;
+                    case FIND_END:
+                        if (RX_buf[i] == PACKAGE_END_1) // 判断第二个停止位，若第二停止位判断成功，则协议结束。重置接收数据缓存区游标
+                        {
+                            bt_rdsta = FIND_START;
+                            bt_buf[bt_rd_pos] = RX_buf[i];
+                            bt_rd_pos = 0;
+                            // TODO: 数据协议包的传输与解析
+                        }
+                        else // 若不为结束位 则返回数据接收模式
+                        {
+                            bt_rdsta = FIND_DATA;
+                            bt_buf[bt_rd_pos] = RX_buf[i];
+                            bt_rd_pos++;
+                        }
+                        break;
+                    default:
+                        bt_rdsta = FIND_START;
+                    }
+                }
+            }
+            else if (FD_ISSET(0, &fdset))
+            {
+                // 检测标准输入 选择发送的 模式
+                char buf[128];
+                fgets(buf, sizeof(buf), stdin);
+                int len = strlen(buf);
+                buf[len - 1] = '\0';
+                printf("\033[32m%s\033[0m is pressed !\n", buf);
+                cmd[11] = buf[1];
+                write(fd_wifi, cmd, 17);
+                // sleep(1);
+                tcflush(fd_wifi, TCIOFLUSH);
+                switch (buf[0])
+                {
+                case '1':
+                    write(fd_wifi, reg_cmd, 30);
+                    break;
+                case '3':
+                    write(fd_wifi, heart_cmd, 30);
+                    break;
+                case '5':
+                    write(fd_wifi, getdata_cmd, 30);
+                    break;
+                case '2':
+                    write(fd_wifi, heart1_cmd, 30);
+                    break;
+                case '4':
+                    write(fd_wifi, getdata1_cmd, 30);
+                    break;
+                case '0':
+                    write(fd_wifi, "AT\r\n", 4);
+                default:
+                    break;
+                }
+                // write(fd_bluetooth, "Hello,Baolinglang\r\n", 19);
+                // write(fd_bluetooth, "AT", 2);
+                fflush(stdin); //清空输入缓存区
+            }
+        }
+        else
+        {
+        }
+    }
+
+    close(fd_wifi);
+    close(fd_bt);
+    return 0;
+}
