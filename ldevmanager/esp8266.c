@@ -14,15 +14,19 @@
 
 #define AT #AT
 #define AT_RST #AT_RST
-#define AT_CWMODE(mode) ToString(AT+CWMODE=##mode##\r\n)
+#define AT_CWMODE(mode) ToString(AT + CWMODE = ##mode##\r\n)
 #define SERVERPORT 8080
+
+// 选择使用的的协议
+#define USE_PROTOCOL USE_UDP
+#define USE_UDP 0 // 标识使用 0 UDP协议 1 TCP协议
+#define USE_TCP 1
 
 // 遍历com端口，寻找esp8266设备并打开
 // 采用 select 方式检测超时
 // 先发送 AT 指令测试，测试是否启动，再发送 AT+RST 指令进行重启操作，重启成功，完成配对
 // @param
 // @return 找到并返回文件描述符，若未找到，返回-1
-//
 int esp8266_open()
 {
     int fd, ret;
@@ -35,6 +39,7 @@ int esp8266_open()
     fd_set fdset;
     FD_ZERO(&fdset);
 
+    // 遍历com口
     for (; comport < 10; comport++)
     {
         timeout.tv_sec = 1;
@@ -106,18 +111,24 @@ int esp8266_open()
 
 // esp8266 配置为热点模式
 // 设备开启多连接 服务器模式
+// 原版本为 TCP 服务器，当前更换为UDP服务器， 丢包问题由上层解决 2018/8/14
 // 热点名称 “ESP8266TEST” 密码“12345678”
 // @param
 // @fd 文件描述符
-//
 int esp8266_config(int fd)
 {
     //char TX_buf[8] = {'A', 'T', '+', 'R', 'S', 'T', '\r', '\n'};
     char RST[] = "AT+RST\r\n";
     char CWMODE[] = "AT+CWMODE=2\r\n";
     char CWSAP[] = "AT+CWSAP=\"ESP8266TEST\",\"12345678\",1,3\r\n";
+#if USE_PROTOCOL == USE_UDP
+    char CIPSTART[] = "AT+CIPSTART=\"UDP\",\"192.168.4.255\",8080,9090,0\r\n";
+    char CIPMODE[] = "AT+CIPMODE=1\r\n";
+    char CIPSEND[] = "AT+CIPSEND\r\n";
+#else
     char CIPMUX[] = "AT+CIPMUX=1\r\n";
     char CIPSERVER[] = "AT+CIPSERVER=1,8080\r\n";
+#endif
 
     set_opt(fd, 115200, 8, 'n', 1);
 
@@ -131,11 +142,19 @@ int esp8266_config(int fd)
     sleep(1);
     write_port(fd, RST, 8);
     sleep(1);
-    write_port(fd, CIPMUX, 13);
+#if USE_PROTOCOL == USE_UDP
+    write_port(fd, CIPSTART, strlen(CIPSTART));
     sleep(1);
-    write_port(fd, CIPSERVER, 21);
+    write_port(fd, CIPMODE, strlen(CIPMODE));
     sleep(1);
+    write_port(fd, CIPSEND, strlen(CIPSEND));
+    sleep(1);
+#else
+    write_port(fd, CIPMUX, strlen(CIPMUX));
+    sleep(1);
+    write_port(fd, CIPSERVER, strlen(CIPSERVER));
+    sleep(1);
+#endif
     tcflush(fd, TCIOFLUSH); // 刷新输入输出缓冲区
-
     return 0;
 }

@@ -8,12 +8,13 @@
 #endif
 
 #ifndef ID_LENGTH
-#define ID_LENGTH 12 // ID字段长度（字节）
+#define ID_LENGTH 2 // ID字段长度（字节）
 #endif
 // 协议头部数据结构
 typedef struct _Header
 {
     uint8_t ver;            // 协议版本
+    uint8_t seq;            // 协议序号
     uint8_t sid[ID_LENGTH]; // 源地址
     uint8_t did[ID_LENGTH]; // 目的地址
     uint8_t type;           // 类型

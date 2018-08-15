@@ -4,6 +4,7 @@
 // 其余为协议版本处理函数 为单独版本函数
 // Packet结构体保存 数据协议内容
 // 协议字符串 与 可处理的结构体 相互转换
+// 数据部分长度可调 更改头文件中 MAX_DATALEN
 #include <stdio.h>
 #include "localProtocol.h"
 
@@ -28,10 +29,11 @@
 // 本地协议版本1 字段位置
 #define LPROTOCOL_VER1_HEADER_START LPROTOCOL_START_POS
 #define LPROTOCOL_VER1_HEADER_VER LPROTOCOL_VER_POS
-#define LPROTOCOL_VER1_HEADER_SID 2      // 源地址首位置 LPROTOCOL_VER1_HEADER_VER+1
-#define LPROTOCOL_VER1_HEADER_DID 14     // 目的地址首位置 LPROTOCOL_VER1_HEADER_VER+12
-#define LPROTOCOL_VER1_HEADER_TYPE 26    // 协议类型所在位置
-#define LPROTOCOL_VER1_HEADER_DATALEN 27 // 数据段长度所在位置
+#define LPROTOCOL_VER1_HEADER_SEQ 2     // 协议序号所在位置
+#define LPROTOCOL_VER1_HEADER_SID 3     // 源地址首位置 LPROTOCOL_VER1_HEADER_VER+1
+#define LPROTOCOL_VER1_HEADER_DID 5     // 目的地址首位置 LPROTOCOL_VER1_HEADER_VER+12
+#define LPROTOCOL_VER1_HEADER_TYPE 7    // 协议类型所在位置
+#define LPROTOCOL_VER1_HEADER_DATALEN 8 // 数据段长度所在位置
 
 // 本地协议数据解析(decode)
 // 将本地数据协议 提取 存入结构体
@@ -99,6 +101,7 @@ int lprotocol_decode_v1(uint8_t *inbuf, Packet *outbuf)
 {
     int cur, end, i;
     outbuf->header.ver = ARRAY_INT(inbuf, LPROTOCOL_VER1_HEADER_VER);         // 从字符串取出版本
+    outbuf->header.seq = ARRAY_INT(inbuf, LPROTOCOL_VER1_HEADER_SEQ);         // 从字符串取出序号
     outbuf->header.type = ARRAY_INT(inbuf, LPROTOCOL_VER1_HEADER_TYPE);       // 从字符串取出类型
     outbuf->header.datalen = ARRAY_INT(inbuf, LPROTOCOL_VER1_HEADER_DATALEN); // 从字符串取出数据长度
     // 循环取出源地址
@@ -136,6 +139,7 @@ int lprotocol_package_v1(Packet *inbuf, uint8_t *outbuf)
     // 头部数据封装
     ARRAY_CHA(outbuf, LPROTOCOL_VER1_HEADER_START) = LPROTOCOL_START;                  // 封装数据起始标志位
     ARRAY_CHA(outbuf, LPROTOCOL_VER1_HEADER_VER) = (uint8_t)LPROTOCOL_VER1;            // 封装协议版本
+    ARRAY_CHA(outbuf, LPROTOCOL_VER1_HEADER_SEQ) = (uint8_t)inbuf->header.seq;         // 封装协议序号
     ARRAY_CHA(outbuf, LPROTOCOL_VER1_HEADER_TYPE) = (uint8_t)inbuf->header.type;       // 封装协议类型
     ARRAY_CHA(outbuf, LPROTOCOL_VER1_HEADER_DATALEN) = (uint8_t)inbuf->header.datalen; // 封装数据长度
     // 循环封装源地址
