@@ -1,4 +1,5 @@
 // ESP8266设备控制文件
+// 两个功能，一个是检测， 一个是配置
 // 由于USB串口配置为阻塞模式，我们采用select方式监听超时
 #include <stdio.h>
 #include <string.h>

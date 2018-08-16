@@ -1,3 +1,4 @@
+// 蓝牙检测文件
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>

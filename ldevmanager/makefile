@@ -1,8 +1,8 @@
 CC = gcc
 
 all : run clean
-run : l_main.o usbctl.o esp8266.o bluetooth.o
-	$(CC) -o run l_main.o usbctl.o esp8266.o bluetooth.o
+run : linfoctl.o l_main.o usbctl.o localProtocol.o esp8266.o bluetooth.o
+	$(CC) -o run linfoctl.o l_main.o usbctl.o localProtocol.o esp8266.o bluetooth.o 
 
 r_main.o : l_main.c
 	$(CC) -c l_main.c
@@ -15,6 +15,12 @@ esp8266.o: esp8266.c
 
 bluetooth.o: bluetooth.c
 	$(CC) -c bluetooth.c
+
+localProtocol.o : ../tools/localProtocol.c
+	$(CC) -c ../tools/localProtocol.c
+
+linfoctl.o : linfoctl.c
+	$(CC) -c linfoctl.c
 
 .PHONY:clean
 clean :

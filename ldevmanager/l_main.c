@@ -49,6 +49,10 @@ int main(int argc, char **argv)
     {
         // TODO: 错误日志处理
         // 无输出管道处理
+        // DEBUG:
+        printf("\033[29mpipe_error\033[0m\n");
+        pfd_out = -1;
+        pfd_in = -1;
     }
     else
     {
