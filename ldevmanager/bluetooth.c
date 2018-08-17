@@ -1,3 +1,4 @@
+// 2018/7/26
 // 蓝牙检测文件
 #include <stdio.h>
 #include <string.h>
@@ -8,6 +9,7 @@
 
 #include "bluetooth.h"
 #include "usbctl.h"
+
 // 遍历com端口，寻找bluetooth设备并打开
 // 采用 select 方式检测超时
 // 先发送 AT 指令测试，测试是否启动，再发送 AT+RST 指令进行重启操作，重启成功，完成配对

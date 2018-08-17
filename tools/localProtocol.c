@@ -5,7 +5,7 @@
 // Packet结构体保存 数据协议内容
 // 协议字符串 与 可处理的结构体 相互转换
 // 数据部分长度可调 更改头文件中 MAX_DATALEN
-// TODO: 加密数据 
+// TODO: 加密数据
 #include <stdio.h>
 #include "localProtocol.h"
 
@@ -107,19 +107,11 @@ int lprotocol_decode_v1(uint8_t *inbuf, Packet *outbuf)
     outbuf->header.seq = ARRAY_INT(inbuf, LPROTOCOL_VER1_HEADER_SEQ);         // 从字符串取出序号
     outbuf->header.type = ARRAY_INT(inbuf, LPROTOCOL_VER1_HEADER_TYPE);       // 从字符串取出类型
     outbuf->header.datalen = ARRAY_INT(inbuf, LPROTOCOL_VER1_HEADER_DATALEN); // 从字符串取出数据长度
-    // 循环取出源地址
-    cur = LPROTOCOL_VER1_HEADER_SID; // 设置游标起始位置
-    for (i = 0; i < ID_LENGTH; cur++, i++)
-    {
-        ARRAY_CHA(outbuf->header.sid, i) = ARRAY_CHA(inbuf, cur);
-    }
-    // 循环取出目的地址
-    cur = LPROTOCOL_VER1_HEADER_DID; // 设置游标起始位置
-    for (i = 0; i < ID_LENGTH; cur++, i++)
-    {
-        ARRAY_CHA(outbuf->header.did, i) = ARRAY_CHA(inbuf, cur);
-    }
+    outbuf->header.sid = (ARRAY_INT(inbuf, LPROTOCOL_VER1_HEADER_SID) << 8) | ARRAY_INT(inbuf, LPROTOCOL_VER1_HEADER_SID + 1);
+    outbuf->header.did = (ARRAY_INT(inbuf, LPROTOCOL_VER1_HEADER_DID) << 8) | ARRAY_INT(inbuf, LPROTOCOL_VER1_HEADER_DID + 1);
 
+    if (outbuf->header.datalen >= MAX_DATALEN)
+        return -1;
     // 循环将数据取出并导入结构体data
     cur = LPROTOCOL_VER1_HEADER_SIZE;   // 设置游标起始位置
     end = cur + outbuf->header.datalen; // 结束位置
@@ -149,19 +141,14 @@ int lprotocol_package_v1(Packet *inbuf, uint8_t *outbuf)
     ARRAY_CHA(outbuf, LPROTOCOL_VER1_HEADER_SEQ) = (uint8_t)inbuf->header.seq;         // 封装协议序号
     ARRAY_CHA(outbuf, LPROTOCOL_VER1_HEADER_TYPE) = (uint8_t)inbuf->header.type;       // 封装协议类型
     ARRAY_CHA(outbuf, LPROTOCOL_VER1_HEADER_DATALEN) = (uint8_t)inbuf->header.datalen; // 封装数据长度
-    // 循环封装源地址
+    // 封装源地址
     cur = LPROTOCOL_VER1_HEADER_SID; // 设置游标起始位置
-    for (i = 0; i < ID_LENGTH; cur++, i++)
-    {
-        ARRAY_CHA(outbuf, cur) = ARRAY_CHA(inbuf->header.sid, i);
-    }
-    // 循环封装目的地址
+    ARRAY_CHA(outbuf, cur) = (char)(inbuf->header.sid >> 8);
+    ARRAY_CHA(outbuf, cur + 1) = (char)(inbuf->header.sid);
+    // 封装目的地址
     cur = LPROTOCOL_VER1_HEADER_DID; // 设置游标起始位置
-    for (i = 0; i < ID_LENGTH; cur++, i++)
-    {
-        ARRAY_CHA(outbuf, cur) = ARRAY_CHA(inbuf->header.did, i);
-    }
-
+    ARRAY_CHA(outbuf, cur) = (char)(inbuf->header.did >> 8);
+    ARRAY_CHA(outbuf, cur + 1) = (char)(inbuf->header.did & 0x00FF);
     // 数据部分封装
     cur = LPROTOCOL_VER1_HEADER_SIZE;  //设置游标起始位置
     end = cur + inbuf->header.datalen; // 结束位置

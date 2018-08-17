@@ -1,8 +1,8 @@
 CC = gcc
 
 all : run clean
-run : linfoctl.o l_main.o usbctl.o localProtocol.o esp8266.o bluetooth.o
-	$(CC) -o run linfoctl.o l_main.o usbctl.o localProtocol.o esp8266.o bluetooth.o 
+run : linfoctl.o l_main.o usbctl.o localProtocol.o esp8266.o bluetooth.o routetable.o
+	$(CC) -o run linfoctl.o l_main.o usbctl.o localProtocol.o esp8266.o bluetooth.o routetable.o
 
 r_main.o : l_main.c
 	$(CC) -c l_main.c
@@ -21,6 +21,9 @@ localProtocol.o : ../tools/localProtocol.c
 
 linfoctl.o : linfoctl.c
 	$(CC) -c linfoctl.c
+
+routetable.o : routetable.c
+	$(CC) -c routetable.c
 
 .PHONY:clean
 clean :

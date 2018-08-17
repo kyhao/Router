@@ -119,6 +119,7 @@ int esp8266_open()
 int esp8266_config(int fd)
 {
     //char TX_buf[8] = {'A', 'T', '+', 'R', 'S', 'T', '\r', '\n'};
+    // UPDATE: 将字符串改为宏定义 增加可移植度
     char RST[] = "AT+RST\r\n";
     char CWMODE[] = "AT+CWMODE=2\r\n";
     char CWSAP[] = "AT+CWSAP=\"ESP8266TEST\",\"12345678\",1,3\r\n";

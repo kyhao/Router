@@ -13,12 +13,12 @@
 // 协议头部数据结构
 typedef struct _Header
 {
-    uint8_t ver;            // 协议版本
-    uint8_t seq;            // 协议序号
-    uint8_t sid[ID_LENGTH]; // 源地址
-    uint8_t did[ID_LENGTH]; // 目的地址
-    uint8_t type;           // 类型
-    uint8_t datalen;        // 数据段长度
+    char ver;            // 协议版本
+    char seq;            // 协议序号
+    int sid; // 源地址
+    int did; // 目的地址
+    char type;           // 类型
+    char datalen;        // 数据段长度
 } Header;
 
 // 协议包数据结构

@@ -14,6 +14,7 @@
 #include "usbctl.h"
 #include "esp8266.h"
 #include "bluetooth.h"
+#include "linfoctl.h"
 // #include "mac.h"
 
 #define DEBUG // 是否开启Debug模式 定义Debug则开启 调试模式
@@ -96,6 +97,8 @@ int main(int argc, char **argv)
     if (-1 == fd_wifi && -1 == fd_bt)
         return -1;
 
+    local_infoctl_init(); // 初始化消息控制函数
+
     char wifi_buf[PACKET_LEN], bt_buf[PACKET_LEN]; // 存放完整协议包
     int wifi_rdsta, bt_rdsta;                      // 设备读取数据状态
     int wifi_rd_pos, bt_rd_pos;                    // 数据协议接收游标
@@ -152,7 +155,7 @@ int main(int argc, char **argv)
                         {
                             wifi_rdsta = FIND_START;
                             wifi_buf[wifi_rd_pos] = RX_buf[i];
-
+#ifdef DEBUG
                             // DEBUG:输出获取的数据包
                             int j;
                             printf("LDEV_WIFI: ");
@@ -161,9 +164,9 @@ int main(int argc, char **argv)
                                 printf("\033[33m%02X \033[0m", wifi_buf[j]);
                             }
                             printf("number: %d\n", wifi_cal[0]++);
-
+#endif
                             // TODO: 数据协议包的传输与解析
-                            write(pfd_out, wifi_buf, wifi_rd_pos + 1);
+                            printf("lprotrol stat: %d\n", local_infoctl(wifi_buf, -1, fd_wifi)); //
                             wifi_rd_pos = 0;
                         }
                         else // 若不为结束位 则返回数据接收模式
@@ -209,7 +212,7 @@ int main(int argc, char **argv)
                         {
                             bt_rdsta = FIND_START;
                             bt_buf[bt_rd_pos] = RX_buf[i];
-
+#ifdef DEBUG
                             // DEBUG:输出获取的数据包
                             int j;
                             printf("LDEV_BLUETOOTH: ");
@@ -218,9 +221,9 @@ int main(int argc, char **argv)
                                 printf("\033[33m%02X \033[0m", bt_buf[j]);
                             }
                             printf("number: %d\n", bt_cal[0]++);
-
+#endif
                             // TODO: 数据协议包的传输与解析
-                            write(pfd_out, bt_buf, bt_rd_pos + 1);
+                            printf("lprotrol stat: %d\n", local_infoctl(bt_buf, -1, fd_bt)); //
                             bt_rd_pos = 0;
                         }
                         else // 若不为结束位 则返回数据接收模式
