@@ -56,6 +56,8 @@ int esp8266_open()
         FD_SET(fd, &fdset);
         // 开始测试 esp8266设备 AT指令
         // 检测设备启动
+        write_port(fd, "+++", 3);
+        sleep(1);
         write_port(fd, "AT\r\n", 4);
         sleep(1);
         // 监听事件 1秒钟 超时跳过

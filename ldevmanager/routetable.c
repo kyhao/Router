@@ -134,7 +134,7 @@ int join_route(int id, int com)
     // FIXME: 应该使用动态数据结构 为了节省开发时间 采用当前模式
     Route_table[id].type = com;
     Route_table[id].stat = DEV_STA_ACTIVE;
-    Route_table[id].last_time = get_time();
+    // Route_table[id].last_time = get_time();
 }
 
 // 匹配表

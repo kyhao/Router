@@ -22,7 +22,7 @@
 #define LPROTOCOL_VER_POS 1
 
 // 本地协议版本
-#define LPROTOCOL_VER1 1 // 协议1字符串格式  |0xFF|<ver>|<id>|<type>|<datalen>|<data>...|
+#define LPROTOCOL_VER1 1 // 协议1字符串格式  |0xFF|<ver>|<seq>|<id>|<type>|<datalen>|<data>...|
 #define LPROTOCOL_VER2 2
 #define LPROTOCOL_VER3 3
 
@@ -48,12 +48,12 @@ int lprotocol_decode(uint8_t *inbuf, Packet *outbuf)
 {
     if (inbuf == NULL || outbuf == NULL)
     {
-        return 1;
+        return 0x0101;
     }
     // 判断起始标识位
     if (inbuf[LPROTOCOL_START_POS] != LPROTOCOL_START)
     {
-        return 2;
+        return 0x0102;
     }
 
     int ver, err;
@@ -64,7 +64,7 @@ int lprotocol_decode(uint8_t *inbuf, Packet *outbuf)
         return lprotocol_decode_v1(inbuf, outbuf);
         break;
     default:
-        return 3;
+        return 0x0103;
     }
     return 0;
 }
@@ -81,7 +81,7 @@ int lprotocol_package(Packet *inbuf, uint8_t *outbuf, int *len, int ver)
 {
     if (inbuf == NULL || outbuf == NULL || len == NULL)
     {
-        return 1;
+        return 0x0101;
     }
     switch (ver)
     {
@@ -90,7 +90,7 @@ int lprotocol_package(Packet *inbuf, uint8_t *outbuf, int *len, int ver)
         *len = inbuf->header.datalen + LPROTOCOL_VER1_HEADER_SIZE + 2;
         break;
     default:
-        return 3;
+        return 0x0106;
     }
     return 0;
 }
@@ -111,7 +111,7 @@ int lprotocol_decode_v1(uint8_t *inbuf, Packet *outbuf)
     outbuf->header.did = (ARRAY_INT(inbuf, LPROTOCOL_VER1_HEADER_DID) << 8) | ARRAY_INT(inbuf, LPROTOCOL_VER1_HEADER_DID + 1);
 
     if (outbuf->header.datalen >= MAX_DATALEN)
-        return -1;
+        return 0x0104;
     // 循环将数据取出并导入结构体data
     cur = LPROTOCOL_VER1_HEADER_SIZE;   // 设置游标起始位置
     end = cur + outbuf->header.datalen; // 结束位置
@@ -122,7 +122,7 @@ int lprotocol_decode_v1(uint8_t *inbuf, Packet *outbuf)
     // 检查结尾标识字节
     if (ARRAY_CHA(inbuf, cur) != LPROTOCOL_END_0 || ARRAY_CHA(inbuf, cur + 1) != LPROTOCOL_END_1)
     {
-        return -1;
+        return 0x0105;
     }
     return 0;
 }

@@ -1,5 +1,5 @@
 // 2018/8/15
-// 本地消息接收控制
+// 本地消息接收处理器
 // UPDATE: 本不应该使用write操作 为了时间效率暂时不分出模块
 #include <stdio.h>
 #include <unistd.h> //
@@ -29,7 +29,7 @@ static int fd_out;
 static char tx_buf[TX_MAX_LEN];
 static Packet packet_ret;
 
-// 初始化变量
+// 初始化
 int local_infoctl_init()
 {
     router_id = ROUTER_ID;
@@ -37,6 +37,11 @@ int local_infoctl_init()
     return 0;
 }
 
+// 传输数据类型函数
+// @param
+// @packet 输入结构体
+// @fd 通信用fd
+// @ndev 设备编号
 static int type_transefer(Packet *packet, int fd, int ndev)
 {
     // 数据传输 若产生错误 忽略消息
@@ -47,18 +52,18 @@ static int type_transefer(Packet *packet, int fd, int ndev)
     int len;
     if (packet->header.did == router_id)
     {
-        if (match_route(packet->header.sid, NULL) == 0)
-        {
-            packet_ret.header.seq = packet->header.seq;
-            packet_ret.header.ver = packet->header.ver;
-            packet_ret.header.sid = router_id;
-            packet_ret.header.did = packet->header.sid;
-            packet_ret.header.type = TYPE_TRANSEFER_ACK;
-            packet_ret.header.datalen = 0x00;
-            lprotocol_package(&packet_ret, tx_buf, &len, LPROROCOL_VER1);
-            write(ndev, tx_buf, len);
-            return 0;
-        }
+        // if (match_route(packet->header.sid, NULL) == 0)
+        // {
+        packet_ret.header.seq = packet->header.seq;
+        packet_ret.header.ver = packet->header.ver;
+        packet_ret.header.sid = router_id;
+        packet_ret.header.did = packet->header.sid;
+        packet_ret.header.type = TYPE_TRANSEFER_ACK;
+        packet_ret.header.datalen = 0x00;
+        lprotocol_package(&packet_ret, tx_buf, &len, LPROROCOL_VER1);
+        write(ndev, tx_buf, len);
+        return 0;
+        // }
     }
     else
     {
@@ -68,6 +73,7 @@ static int type_transefer(Packet *packet, int fd, int ndev)
 
 static int type_control_ack(Packet *packet, int ndev)
 {
+
     return 0;
 }
 
@@ -86,8 +92,10 @@ static int type_regist(Packet *packet, int ndev)
         // 1.分配设备id
         // 2.id与ndev路由表匹配
         int id = getdevid();
-        if (id = -1)
+        if (id == -1)
+        {
             return 0x0103;
+        }
         join_route(id, ndev); //
         // UPDATE: 当前直接采取将协议丢出
         packet_ret.header.seq = packet->header.seq;
@@ -97,6 +105,7 @@ static int type_regist(Packet *packet, int ndev)
         packet_ret.header.type = TYPE_REGIST_ACK;
         packet_ret.header.datalen = 0x00;
         lprotocol_package(&packet_ret, tx_buf, &len, LPROROCOL_VER1);
+        printf("len: %d\n", len);
         write(ndev, tx_buf, len);
     }
     else
@@ -108,17 +117,17 @@ static int type_regist(Packet *packet, int ndev)
         // UPDATE: 当前直接采取将协议丢出
         if (packet->header.did == router_id)
         {
-            if (match_route(packet->header.sid, NULL) == 0)
-            {
-                packet_ret.header.seq = packet->header.seq;
-                packet_ret.header.ver = packet->header.ver;
-                packet_ret.header.sid = router_id;
-                packet_ret.header.did = packet->header.sid;
-                packet_ret.header.type = TYPE_REGIST_ACK;
-                packet_ret.header.datalen = 0x00;
-                lprotocol_package(&packet_ret, tx_buf, &len, LPROROCOL_VER1);
-                write(ndev, tx_buf, len);
-            }
+            // if (match_route(packet->header.sid, NULL) == 0)
+            // {
+            packet_ret.header.seq = packet->header.seq;
+            packet_ret.header.ver = packet->header.ver;
+            packet_ret.header.sid = router_id;
+            packet_ret.header.did = packet->header.sid;
+            packet_ret.header.type = TYPE_REGIST_ACK;
+            packet_ret.header.datalen = 0x00;
+            lprotocol_package(&packet_ret, tx_buf, &len, LPROROCOL_VER1);
+            write(ndev, tx_buf, len);
+            // }
         }
         else
         {
@@ -129,44 +138,24 @@ static int type_regist(Packet *packet, int ndev)
 
 // 本地消息控制函数(接收)
 // @param
-// @lprotocol 输入 协议消息字符串
-// @fd 通信用文件描述符 出口
-// @ndev 设备端口号 设备文件描述符 进口
-// @return 错误值 0无错误
-int local_infoctl(char *lprotocol, int fd, int ndev)
+// @packet
+int lpctl(Packet *packet)
 {
-    int ret, sid, did;
-    Packet packet;
-    fd_out = fd;
-    ret = lprotocol_decode(lprotocol, &packet); // 数据包解析
 
-    if (ret == 0)
+    switch (packet.header.type)
     {
-        // DEBUG: printf
-        printf("header_seq: %d\n", packet.header.seq);
-        printf("sid: %d did : %d\n", packet.header.sid, packet.header.did);
-        printf("header_type: %d\n", packet.header.type);
-        printf("router_id: %d\n", router_id);
-
-        switch (packet.header.type)
-        {
-        case TYPE_REGIST:
-            type_regist(&packet, ndev);
-            break;
-        case TYPE_TRANSEFER:
-            type_transefer(&packet, fd, ndev);
-            break;
-        case TYPE_CONTROL_ACK:
-            type_control_ack(&packet, ndev);
-            break;
-        default:
-            return 0x1010;
-        }
+    case TYPE_REGIST:
+        type_regist(packet);
+        break;
+    case TYPE_TRANSEFER:
+        type_transefer(packet);
+        break;
+    case TYPE_CONTROL_ACK:
+        type_control_ack(packet);
+        break;
+    default:
+        break;
     }
-    else
-    {
-        //DEBUG: printf
-        printf("decode_error\n");
-    }
-    return 0;
+    try
+        return 0;
 }
