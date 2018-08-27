@@ -1,6 +1,7 @@
 // Local Net Device Manager
 // Made 2018/7/21
-// Last Modify 2018/8/21 取消管道方式
+// Modify 2018/8/21 取消管道方式
+// Modify 2018/8/24 优化监听代码\提升所有设备兼容性
 // 未说明的长度默认为字节
 // TODO: 设备的插入与中途退出识别检测（即插即用）
 // TODO: LoRa设备的接入策略采用通用串口总线
@@ -16,9 +17,9 @@
 #include "driver/usbctl.h"
 #include "driver/esp8266.h"
 #include "driver/bluetooth.h"
-// 协议处理调用
-// #include "tools/localProtocol.h"
-// #include "linfoctl.h"
+#include "driver/lora.h"
+
+#include "lpctl.h"
 
 #define DEBUG // 是否开启Debug模式 定义Debug则开启 调试模式
 
@@ -38,6 +39,7 @@
 #define MAX_FD(x, y) (x > y ? x : y)
 
 // 测试函数，显示
+static int cal_num = 0;
 void packet_show(int pos, char *buf, char *title)
 {
     // DEBUG: 输出获取的数据包
@@ -47,13 +49,14 @@ void packet_show(int pos, char *buf, char *title)
     {
         printf("\033[33m%02X \033[0m", buf[j]);
     }
-    printf("\n");
+    printf(" num:%d\n", cal_num);
+    cal_num++;
 }
 
 // 调用设备驱动，初始化设备
 // @param
 // @fd_array 设备文件描述符数组
-// @num 输出文件描述符数量
+// @num 输出变量文件描述符数量
 int dev_init(int *fd_array, int *num)
 {
     int fd_wifi, fd_bt, fd_lora, fd_nb; // wifi,蓝牙,lora,nb,设备描述符
@@ -85,8 +88,21 @@ int dev_init(int *fd_array, int *num)
         pos++;
         num_dev++;
     }
+    // lora设备选择
+    fd_lora = lora_open();
+    if (-1 == fd_lora)
+    {
+        printf("->> No Lora devcie\n");
+        // return -1;
+    }
+    else
+    {
+        fd_array[pos] = fd_lora;
+        pos++;
+        num_dev++;
+    }
     // 若设备无法检测与选择则退出
-    if (-1 == fd_wifi && -1 == fd_bt)
+    if (-1 == fd_wifi && -1 == fd_bt && -1 == fd_lora)
         return -1;
     *num = num_dev;
 }
@@ -106,7 +122,10 @@ int main(int argc, char **argv)
     int dev_rdsta[MAXDEVFD_NUM], dev_rdpos[MAXDEVFD_NUM]; // 设备读取数据状态 数据协议接收游标 需初始化
     int fd_max, fd_num;                                   // 最大文件描述符/文件描述符数
 
-    dev_init(dfd_array, &fd_num); // 设备初始化
+    ret = dev_init(dfd_array, &fd_num); // 设备初始化
+    lpctl_init();                       // 协议控制初始化
+    if (ret == -1)
+        return -1;
 
     // 初始化设备读写状态变量
     for (i = 0; i < fd_num; i++)
@@ -163,10 +182,12 @@ int main(int argc, char **argv)
                                 dev_rdsta[i] = FIND_START;
                                 dev_buf[i][dev_rdpos[i]] = RX_buf[j];
 #ifdef DEBUG
-                                packet_show(dev_rdpos[i], dev_buf[i], "_GET:");
+                                packet_show(dev_rdpos[i], dev_buf[i], "_GET_: ");
 #endif
-                                // 数据协议包的传输与解析
+                                // TODO: 数据协议包的传输与解析
+                                // write(dfd_array[i], dev_buf[i], dev_rdpos[i] + 1);
                                 dev_rdpos[i] = 0;
+                                lpctl(dev_buf[i], dfd_array[i]);
                             }
                             else // 若不为结束位 则返回数据接收模式
                             {
@@ -197,7 +218,7 @@ int main(int argc, char **argv)
         }
     }
 
-    // 关闭文件描述符 未关闭通信设备
+    // 关闭文件描述符 但未关闭通信设备
     for (i = 0; i < fd_num; i++)
     {
         close(dfd_array[i]);

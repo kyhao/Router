@@ -1,11 +1,9 @@
 CC = gcc
 
 all : run clean
-#run : linfoctl.o l_main.o usbctl.o localProtocol.o esp8266.o bluetooth.o routetable.o
-#	$(CC) -o run linfoctl.o l_main.o usbctl.o localProtocol.o esp8266.o bluetooth.o routetable.o
+run : lpctl.o l_main.o usbctl.o localProtocol.o esp8266.o bluetooth.o routetable.o lora.o wrap.o
+	$(CC) -o run lpctl.o l_main.o usbctl.o localProtocol.o esp8266.o bluetooth.o routetable.o lora.o wrap.o
 
-run : l_main.o usbctl.o localProtocol.o esp8266.o bluetooth.o routetable.o
-	$(CC) -o run  l_main.o usbctl.o localProtocol.o esp8266.o bluetooth.o routetable.o
 
 r_main.o : l_main.c
 	$(CC) -c l_main.c
@@ -19,14 +17,20 @@ esp8266.o: driver/esp8266.c
 bluetooth.o: driver/bluetooth.c
 	$(CC) -c driver/bluetooth.c
 
-localProtocol.o : ../tools/localProtocol.c
-	$(CC) -c ../tools/localProtocol.c
+lora.o: driver/lora.c
+	$(CC) -c driver/lora.c
 
-#linfoctl.o : linfoctl.c
-#	$(CC) -c linfoctl.c
+localProtocol.o : localProtocol.c
+	$(CC) -c localProtocol.c
+
+lpctl.o : lpctl.c
+	$(CC) -c lpctl.c
 
 routetable.o : routetable.c
 	$(CC) -c routetable.c
+
+wrap.o:	../wanmanager/wrap.c
+	$(CC) -c ../wanmanager/wrap.c
 
 .PHONY:clean
 clean :

@@ -162,3 +162,11 @@ int esp8266_config(int fd)
     tcflush(fd, TCIOFLUSH); // 刷新输入输出缓冲区
     return 0;
 }
+
+int getespinfo()
+{
+}
+
+int getespsta()
+{
+}

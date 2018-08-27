@@ -4,9 +4,15 @@
 #include <stdio.h>
 #include <unistd.h> //
 #include <fcntl.h>  //
-#include "linfoctl.h"
+#include "lpctl.h"
 #include "routetable.h"
-#include "../tools/localProtocol.h"
+#include "localProtocol.h"
+
+#include <string.h>
+#include <netinet/in.h>
+#include "../wanmanager/wrap.h"
+#define MAXLINE 80
+#define SERV_PORT 8000
 
 // 测试阶段使用宏定义 注意后期修改为 由配置文件读取
 #define ROUTER_ID 0x0101
@@ -25,15 +31,27 @@
 #define TX_MAX_LEN 128
 
 static int router_id;
-static int fd_out;
+static int fd_out, ret;
 static char tx_buf[TX_MAX_LEN];
-static Packet packet_ret;
+
+// 网络变量
+static struct sockaddr_in servaddr;
+static char buf[MAXLINE];
+static int sockfd, n;
 
 // 初始化
-int local_infoctl_init()
+int lpctl_init()
 {
     router_id = ROUTER_ID;
     routetable_init(); // 路由表初始化
+    // 网络初始化
+    sockfd = Socket(AF_INET, SOCK_STREAM, 0);
+    bzero(&servaddr, sizeof(servaddr));
+    servaddr.sin_family = AF_INET;
+    inet_pton(AF_INET, "192.168.1.100", &servaddr.sin_addr);
+    servaddr.sin_port = htons(SERV_PORT);
+    Connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr));
+    // 网络初始化结束
     return 0;
 }
 
@@ -42,7 +60,7 @@ int local_infoctl_init()
 // @packet 输入结构体
 // @fd 通信用fd
 // @ndev 设备编号
-static int type_transefer(Packet *packet, int fd, int ndev)
+static int type_transefer(Packet *packet, int dfd)
 {
     // 数据传输 若产生错误 忽略消息
     // 1.检测目的id与本机id
@@ -50,6 +68,7 @@ static int type_transefer(Packet *packet, int fd, int ndev)
     // TODO: 3.数据提取与发送
     // 4.成功 返回ACK
     int len;
+    Packet packet_ret;
     if (packet->header.did == router_id)
     {
         // if (match_route(packet->header.sid, NULL) == 0)
@@ -61,7 +80,9 @@ static int type_transefer(Packet *packet, int fd, int ndev)
         packet_ret.header.type = TYPE_TRANSEFER_ACK;
         packet_ret.header.datalen = 0x00;
         lprotocol_package(&packet_ret, tx_buf, &len, LPROROCOL_VER1);
-        write(ndev, tx_buf, len);
+        write(packet->dev, tx_buf, len);
+        Write(sockfd, tx_buf, len);
+
         return 0;
         // }
     }
@@ -71,7 +92,7 @@ static int type_transefer(Packet *packet, int fd, int ndev)
     return 0x0103;
 }
 
-static int type_control_ack(Packet *packet, int ndev)
+static int type_control_ack(Packet *packet, int dfd)
 {
 
     return 0;
@@ -82,9 +103,10 @@ static int type_control_ack(Packet *packet, int ndev)
 // @packet 已处理好的数据包
 // @ndev 设备
 // @return 返状态值
-static int type_regist(Packet *packet, int ndev)
+static int type_regist(Packet *packet, int dfd)
 {
     int len;
+    Packet packet_ret;
     // 检查id位
     if (packet->header.sid == 0x0000 && packet->header.did == 0x0000)
     {
@@ -96,7 +118,7 @@ static int type_regist(Packet *packet, int ndev)
         {
             return 0x0103;
         }
-        join_route(id, ndev); //
+        // join_route(id, packet->dev); //
         // UPDATE: 当前直接采取将协议丢出
         packet_ret.header.seq = packet->header.seq;
         packet_ret.header.ver = packet->header.ver;
@@ -106,7 +128,7 @@ static int type_regist(Packet *packet, int ndev)
         packet_ret.header.datalen = 0x00;
         lprotocol_package(&packet_ret, tx_buf, &len, LPROROCOL_VER1);
         printf("len: %d\n", len);
-        write(ndev, tx_buf, len);
+        write(packet->dev, tx_buf, len);
     }
     else
     {
@@ -115,6 +137,7 @@ static int type_regist(Packet *packet, int ndev)
         // 2.若目的地址为本机，查询源地址是否包含在路由表内
         // 3.若路由表包含 修改其状态
         // UPDATE: 当前直接采取将协议丢出
+        Packet packet_ret;
         if (packet->header.did == router_id)
         {
             // if (match_route(packet->header.sid, NULL) == 0)
@@ -126,7 +149,7 @@ static int type_regist(Packet *packet, int ndev)
             packet_ret.header.type = TYPE_REGIST_ACK;
             packet_ret.header.datalen = 0x00;
             lprotocol_package(&packet_ret, tx_buf, &len, LPROROCOL_VER1);
-            write(ndev, tx_buf, len);
+            write(packet->dev, tx_buf, len);
             // }
         }
         else
@@ -139,23 +162,30 @@ static int type_regist(Packet *packet, int ndev)
 // 本地消息控制函数(接收)
 // @param
 // @packet
-int lpctl(Packet *packet)
+int lpctl(char *in_buf, int dfd)
 {
-
+    Packet packet;
+    ret = lprotocol_decode(in_buf, &packet);
+    if (ret != 0)
+    {
+        printf("decode error;");
+        return 0x0103;
+    }
+    packet.dev = dfd;
     switch (packet.header.type)
     {
     case TYPE_REGIST:
-        type_regist(packet);
+        type_regist(&packet, dfd);
         break;
     case TYPE_TRANSEFER:
-        type_transefer(packet);
+        type_transefer(&packet, dfd);
         break;
     case TYPE_CONTROL_ACK:
-        type_control_ack(packet);
+        type_control_ack(&packet, dfd);
         break;
     default:
+        return 0x0104;
         break;
     }
-    try
-        return 0;
+    return 0;
 }

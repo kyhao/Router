@@ -7,15 +7,15 @@
 #include <termios.h>
 #include <sys/select.h>
 
-#include "bluetooth.h"
+#include "lora.h"
 #include "usbctl.h"
 
-// 遍历com端口，寻找bluetooth设备并打开
+// 遍历com端口，寻找lora设备并打开
 // 采用 select 方式检测超时
 // 先发送 AT 指令测试，测试是否启动，再发送 AT+RST 指令进行重启操作，重启成功，完成配对
 // @param
 // @return 找到并返回文件描述符，若未找到，返回-1
-int bluetooth_open()
+int lora_open()
 {
     int fd, ret;
     char *p;
@@ -41,7 +41,7 @@ int bluetooth_open()
         ret = set_opt(fd, 115200, 8, 'n', 1);
 
         FD_SET(fd, &fdset);
-        // 开始测试 bluetooth设备 AT指令
+        // 开始测试 LoRa设备 AT指令
         // 检测设备启动
         write_port(fd, "AT\r\n", 4);
         sleep(1);
@@ -62,7 +62,7 @@ int bluetooth_open()
                 if (ret > 0)
                 {
                     // 检查AT指令返回值
-                    p = strstr(buf, "BLUETOOTH");
+                    p = strstr(buf, "LoRa");
                     if (p != NULL)
                     {
                         return fd;
@@ -76,10 +76,10 @@ int bluetooth_open()
     return -1;
 }
 
-int getbtinfo()
+int getlorainfo()
 {
 }
 
-int getbtsta()
+int getlorasta()
 {
 }
