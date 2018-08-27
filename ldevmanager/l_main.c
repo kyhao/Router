@@ -12,6 +12,7 @@
 #include <fcntl.h>
 #include <termios.h>
 #include <sys/select.h>
+#include <pthread.h>
 
 // 设备驱动调用
 #include "driver/usbctl.h"
@@ -38,6 +39,7 @@
 
 #define MAX_FD(x, y) (x > y ? x : y)
 
+#ifdef DEBUG
 // 测试函数，显示
 static int cal_num = 0;
 void packet_show(int pos, char *buf, char *title)
@@ -52,6 +54,7 @@ void packet_show(int pos, char *buf, char *title)
     printf(" num:%d\n", cal_num);
     cal_num++;
 }
+#endif
 
 // 调用设备驱动，初始化设备
 // @param
@@ -121,11 +124,15 @@ int main(int argc, char **argv)
     char dev_buf[MAXDEVFD_NUM][PACKET_LEN];               // 存放完整协议包
     int dev_rdsta[MAXDEVFD_NUM], dev_rdpos[MAXDEVFD_NUM]; // 设备读取数据状态 数据协议接收游标 需初始化
     int fd_max, fd_num;                                   // 最大文件描述符/文件描述符数
+    pthread_t tid;
+    ARG_M arg;
 
+    // 开启设备数据接收程序
     ret = dev_init(dfd_array, &fd_num); // 设备初始化
-    lpctl_init();                       // 协议控制初始化
     if (ret == -1)
         return -1;
+
+    lpctl_init();
 
     // 初始化设备读写状态变量
     for (i = 0; i < fd_num; i++)
@@ -184,10 +191,13 @@ int main(int argc, char **argv)
 #ifdef DEBUG
                                 packet_show(dev_rdpos[i], dev_buf[i], "_GET_: ");
 #endif
-                                // TODO: 数据协议包的传输与解析
-                                // write(dfd_array[i], dev_buf[i], dev_rdpos[i] + 1);
                                 dev_rdpos[i] = 0;
-                                lpctl(dev_buf[i], dfd_array[i]);
+
+                                // TODO: 数据协议包的传输与解析
+                                arg.buf = dev_buf[i];
+                                arg.dfd = dfd_array[i];
+                                pthread_create(&tid, NULL, (void *)lp_ctl, (void *)&arg);
+                                pthread_detach(tid);
                             }
                             else // 若不为结束位 则返回数据接收模式
                             {

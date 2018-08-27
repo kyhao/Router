@@ -2,11 +2,11 @@ CC = gcc
 
 all : run clean
 run : lpctl.o l_main.o usbctl.o localProtocol.o esp8266.o bluetooth.o routetable.o lora.o wrap.o
-	$(CC) -o run lpctl.o l_main.o usbctl.o localProtocol.o esp8266.o bluetooth.o routetable.o lora.o wrap.o
+	$(CC) -o run lpctl.o l_main.o usbctl.o localProtocol.o esp8266.o bluetooth.o routetable.o lora.o wrap.o  -lpthread
 
 
 r_main.o : l_main.c
-	$(CC) -c l_main.c
+	$(CC) -c l_main.c -lpthread
 
 usbctl.o : driver/usbctl.c
 	$(CC) -c driver/usbctl.c

@@ -32,12 +32,10 @@
 
 static int router_id;
 static int fd_out, ret;
-static char tx_buf[TX_MAX_LEN];
 
 // 网络变量
 static struct sockaddr_in servaddr;
-static char buf[MAXLINE];
-static int sockfd, n;
+static int sockfd;
 
 // 初始化
 int lpctl_init()
@@ -68,7 +66,9 @@ static int type_transefer(Packet *packet, int dfd)
     // TODO: 3.数据提取与发送
     // 4.成功 返回ACK
     int len;
+    char tx_buf[TX_MAX_LEN];
     Packet packet_ret;
+
     if (packet->header.did == router_id)
     {
         // if (match_route(packet->header.sid, NULL) == 0)
@@ -106,6 +106,7 @@ static int type_control_ack(Packet *packet, int dfd)
 static int type_regist(Packet *packet, int dfd)
 {
     int len;
+    char tx_buf[TX_MAX_LEN];
     Packet packet_ret;
     // 检查id位
     if (packet->header.sid == 0x0000 && packet->header.did == 0x0000)
@@ -188,4 +189,11 @@ int lpctl(char *in_buf, int dfd)
         break;
     }
     return 0;
+}
+
+void lp_ctl(void *arg)
+{
+    printf("start\n");
+    lpctl(((ARG_M *)arg)->buf, ((ARG_M *)arg)->dfd);
+    printf("end\n");
 }
