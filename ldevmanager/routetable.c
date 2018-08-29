@@ -93,7 +93,7 @@ int routetable_init()
 // ID分配
 // @param
 // @return 正确返回id号 错误返回-1
-int getdevid()
+int id_alloc()
 {
     int i;
     for (i = id_cur + 1; i <= ID_NUM_MAX; i++)

@@ -191,7 +191,8 @@ int main(int argc, char **argv)
                                 dev_rdpos[i] = 0;
 
                                 // TODO: 数据协议包的传输与解析
-                                lpctl(dev_buf[i], dfd_array[i]);
+                                ret = lpctl(dev_buf[i], dfd_array[i]);
+                                printf("lpctl > ret = 0x%04X\n", ret);
                             }
                             else // 若不为结束位 则返回数据接收模式
                             {

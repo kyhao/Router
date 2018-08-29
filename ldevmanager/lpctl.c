@@ -9,7 +9,7 @@
 #include "localProtocol.h"
 
 // 测试阶段使用宏定义 注意后期修改为 由配置文件读取
-#define ROUTER_ID 0x0101
+#define ROUTER_ID 0xCCCC
 
 // 协议类型定义
 #define TYPE_REGIST 0x01
@@ -25,7 +25,18 @@
 #define TX_MAX_LEN 128
 
 static int router_id;
-static int fd_out, ret;
+static int fd_out;
+
+void packet1_show(int pos, char *buf, char *title)
+{
+    // DEBUG: 输出获取的数据包
+    int j;
+    printf("%s: ", title);
+    for (j = 0; j <= pos; j++)
+    {
+        printf("\033[33m%02X \033[0m", buf[j]);
+    }
+}
 
 // 初始化
 int lpctl_init()
@@ -66,7 +77,7 @@ static int type_transefer(Packet *packet, int dfd)
     else
     {
     }
-    return 0x0103;
+    return 0x0203;
 }
 
 static int type_control_ack(Packet *packet, int dfd)
@@ -92,7 +103,7 @@ static int type_regist(Packet *packet, int dfd)
         // TODO: 1.分配设备id
         // TODO: 2.id与ndev路由表匹配
         // UPDATE: 当前直接采取将协议丢出
-        int id = 0xa0303;
+        int id = 0x0303;
         packet_ret.header.seq = packet->header.seq;
         packet_ret.header.ver = packet->header.ver;
         packet_ret.header.sid = router_id;
@@ -100,7 +111,8 @@ static int type_regist(Packet *packet, int dfd)
         packet_ret.header.type = TYPE_REGIST_ACK;
         packet_ret.header.datalen = 0x00;
         lprotocol_package(&packet_ret, tx_buf, &len, LPROROCOL_VER1);
-        printf("len: %d\n", len);
+        printf("len_reg: %d\n", len);
+        packet1_show(len, tx_buf, "_output_ : ");
         write(packet->dev, tx_buf, len);
     }
     else
@@ -127,9 +139,10 @@ static int type_regist(Packet *packet, int dfd)
         }
         else
         {
-            return 0x0102;
+            return 0x0202;
         }
     }
+    return 0;
 }
 
 // 数据包解析控制控制函数(接收)
@@ -138,27 +151,27 @@ static int type_regist(Packet *packet, int dfd)
 int lpctl(char *in_buf, int dfd)
 {
     Packet packet;
+    int ret;
     ret = lprotocol_decode(in_buf, &packet);
     if (ret != 0)
     {
-        printf("decode error;");
-        return 0x0103;
+        return ret;
     }
     packet.dev = dfd;
     switch (packet.header.type)
     {
     case TYPE_REGIST:
-        type_regist(&packet, dfd);
+        ret = type_regist(&packet, dfd);
         break;
     case TYPE_TRANSEFER:
-        type_transefer(&packet, dfd);
+        ret = type_transefer(&packet, dfd);
         break;
     case TYPE_CONTROL_ACK:
-        type_control_ack(&packet, dfd);
+        ret = type_control_ack(&packet, dfd);
         break;
     default:
-        return 0x0104;
+        return 0x0204;
         break;
     }
-    return 0;
+    return ret;
 }

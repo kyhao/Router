@@ -35,6 +35,6 @@ int route_join(int id, int type);
 int route_march(int id, int type);
 int route_release(int id);
 int route_modify(int id, int sta);
-void route_maintain(void);
+int route_maintain(void);
 
 #endif
