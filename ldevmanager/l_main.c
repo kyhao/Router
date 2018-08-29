@@ -12,7 +12,6 @@
 #include <fcntl.h>
 #include <termios.h>
 #include <sys/select.h>
-#include <pthread.h>
 
 // 设备驱动调用
 #include "driver/usbctl.h"
@@ -124,8 +123,6 @@ int main(int argc, char **argv)
     char dev_buf[MAXDEVFD_NUM][PACKET_LEN];               // 存放完整协议包
     int dev_rdsta[MAXDEVFD_NUM], dev_rdpos[MAXDEVFD_NUM]; // 设备读取数据状态 数据协议接收游标 需初始化
     int fd_max, fd_num;                                   // 最大文件描述符/文件描述符数
-    pthread_t tid;
-    ARG_M arg;
 
     // 开启设备数据接收程序
     ret = dev_init(dfd_array, &fd_num); // 设备初始化
@@ -194,10 +191,7 @@ int main(int argc, char **argv)
                                 dev_rdpos[i] = 0;
 
                                 // TODO: 数据协议包的传输与解析
-                                arg.buf = dev_buf[i];
-                                arg.dfd = dfd_array[i];
-                                pthread_create(&tid, NULL, (void *)lp_ctl, (void *)&arg);
-                                pthread_detach(tid);
+                                lpctl(dev_buf[i], dfd_array[i]);
                             }
                             else // 若不为结束位 则返回数据接收模式
                             {

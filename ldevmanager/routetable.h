@@ -18,19 +18,23 @@ typedef struct _Routetable
     int id;
     int type;
     int stat;
+    int reg_time;
     int last_time;
 } Routetable;
 
-int routetable_init(void);
+int route_id_init(void);
 
 // ID管理
-int getdevid(void);
+int idpool_init(void);
+int id_Alloca(void);
+int id_Release(int id);
 
 // 路由表管理
-int join_route(int id, int com);
-int match_route(int id, int *com);
-int delete_route(int id);
-int modify_route(int id, int sta);
-void check_route(void);
+int route_init(void);
+int route_join(int id, int type);
+int route_march(int id, int type);
+int route_release(int id);
+int route_modify(int id, int sta);
+void route_maintain(void);
 
 #endif

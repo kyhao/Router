@@ -1,18 +1,12 @@
 // 2018/8/15
 // 本地消息接收处理器
 // UPDATE: 本不应该使用write操作 为了时间效率暂时不分出模块
+// 当前模块不具备多线程能力
 #include <stdio.h>
 #include <unistd.h> //
 #include <fcntl.h>  //
 #include "lpctl.h"
-#include "routetable.h"
 #include "localProtocol.h"
-
-#include <string.h>
-#include <netinet/in.h>
-#include "../wanmanager/wrap.h"
-#define MAXLINE 80
-#define SERV_PORT 8000
 
 // 测试阶段使用宏定义 注意后期修改为 由配置文件读取
 #define ROUTER_ID 0x0101
@@ -33,23 +27,10 @@
 static int router_id;
 static int fd_out, ret;
 
-// 网络变量
-static struct sockaddr_in servaddr;
-static int sockfd;
-
 // 初始化
 int lpctl_init()
 {
     router_id = ROUTER_ID;
-    routetable_init(); // 路由表初始化
-    // 网络初始化
-    sockfd = Socket(AF_INET, SOCK_STREAM, 0);
-    bzero(&servaddr, sizeof(servaddr));
-    servaddr.sin_family = AF_INET;
-    inet_pton(AF_INET, "192.168.1.100", &servaddr.sin_addr);
-    servaddr.sin_port = htons(SERV_PORT);
-    Connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr));
-    // 网络初始化结束
     return 0;
 }
 
@@ -71,8 +52,6 @@ static int type_transefer(Packet *packet, int dfd)
 
     if (packet->header.did == router_id)
     {
-        // if (match_route(packet->header.sid, NULL) == 0)
-        // {
         packet_ret.header.seq = packet->header.seq;
         packet_ret.header.ver = packet->header.ver;
         packet_ret.header.sid = router_id;
@@ -81,10 +60,8 @@ static int type_transefer(Packet *packet, int dfd)
         packet_ret.header.datalen = 0x00;
         lprotocol_package(&packet_ret, tx_buf, &len, LPROROCOL_VER1);
         write(packet->dev, tx_buf, len);
-        Write(sockfd, tx_buf, len);
 
         return 0;
-        // }
     }
     else
     {
@@ -112,15 +89,10 @@ static int type_regist(Packet *packet, int dfd)
     if (packet->header.sid == 0x0000 && packet->header.did == 0x0000)
     {
         // 初次注册
-        // 1.分配设备id
-        // 2.id与ndev路由表匹配
-        int id = getdevid();
-        if (id == -1)
-        {
-            return 0x0103;
-        }
-        // join_route(id, packet->dev); //
+        // TODO: 1.分配设备id
+        // TODO: 2.id与ndev路由表匹配
         // UPDATE: 当前直接采取将协议丢出
+        int id = 0xa0303;
         packet_ret.header.seq = packet->header.seq;
         packet_ret.header.ver = packet->header.ver;
         packet_ret.header.sid = router_id;
@@ -160,7 +132,7 @@ static int type_regist(Packet *packet, int dfd)
     }
 }
 
-// 本地消息控制函数(接收)
+// 数据包解析控制控制函数(接收)
 // @param
 // @packet
 int lpctl(char *in_buf, int dfd)
@@ -189,11 +161,4 @@ int lpctl(char *in_buf, int dfd)
         break;
     }
     return 0;
-}
-
-void lp_ctl(void *arg)
-{
-    printf("start\n");
-    lpctl(((ARG_M *)arg)->buf, ((ARG_M *)arg)->dfd);
-    printf("end\n");
 }
