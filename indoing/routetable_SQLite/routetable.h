@@ -37,9 +37,10 @@ void route_id_init(void);
 
 // ID管理
 int idpool_init(void);
+int idpool_rest(void);
 int id_Alloca(void);
 int id_Release(int id);
-int id_Update(void);
+int idpool_Update(void);
 
 // 路由表管理
 int route_init(void);

@@ -37,6 +37,7 @@ void route_id_init(void)
     // 配置id及路由表的大小
     size = IDPOOL_SIZE;
     ID_POOL = (char *)malloc(sizeof(char) * (size + 1)); // 无需释放常驻内存
+    id_cur = ID_BYTE_BEGING;
     // 初始化无名信号量互斥锁
     ret = sem_init(&mutex_id, 0, 1);    // id信号量
     ret = sem_init(&mutex_route, 0, 1); // route信号量
@@ -81,6 +82,26 @@ int idpool_init(void)
     }
     fclose(ifp);
     return 0;
+}
+
+// 重置id池
+int idpool_rest(void)
+{
+    int i;
+    for (i = 0; i < IDPOOL_SIZE; i++)
+    {
+        if ((i & 0x00FF) == 0x000D) // 去除0x0D的影响
+        {
+            ID_POOL[i] = ID_USED;
+        }
+        else
+        {
+            ID_POOL[i] = ID_FREE;
+        }
+    }
+    ID_POOL[IDPOOL_SIZE] = '\0';
+    id_cur = ID_BYTE_BEGING;
+    idpool_Update();
 }
 
 // ID分配函数
@@ -134,7 +155,7 @@ int id_Release(int id)
 // 将内存中id池写入文件当中
 // @param
 // @return 0正常
-int id_Update(void)
+int idpool_Update(void)
 {
     sem_wait(&mutex_id);
     int i, ret;
@@ -163,7 +184,7 @@ int id_Update(void)
     else
     {
         // 内存中id池数据写入文件
-        fprintf(ifp, "%d:%s", ID_BYTE_BEGING, ID_POOL);
+        fprintf(ifp, "%d:%s", id_cur, ID_POOL);
     }
     fclose(ifp);
     sem_post(&mutex_id);
