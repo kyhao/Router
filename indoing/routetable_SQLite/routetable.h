@@ -29,8 +29,8 @@ typedef struct _Routetable
     int id;
     int dtype;
     int stat;
-    time_t reg_time;
-    time_t last_time;
+    long reg_time;
+    long last_time;
 } Routetable;
 
 void route_id_init(void);
