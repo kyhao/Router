@@ -5,6 +5,7 @@
 // 模块具备多线程/进程调用能力
 // 采用POSIX标准信号量 -lpthread
 // 采用SQLite 需要有SQLite支持 -lsqlite3
+// 可优化项：可以一次执行多条SQL语句，减少调用开销
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -40,9 +41,12 @@
 #define SQL_UPDATE_FORMAT "UPDATE route_table "             \
                           "SET stat = %d, last_time = %ld " \
                           "WHERE id == %d;"
-#define SQL_MAINTAIN_FORMAT "UPDATE route_table " \
-                            "SET stat = 2"        \
-                            "WHERE %ld - last_time > 3600;"
+#define SQL_MAINTAIN_FORMAT "UPDATE route_table "           \
+                            "SET stat = 2 "                 \
+                            "WHERE %ld - last_time > 7200;" \
+                            "UPDATE route_table "           \
+                            "SET stat = 3 "                 \
+                            "WHERE %ld - last_time > 172800;" // 两小时超时时间,两天释放时间
 #define SQL_DELETE_FORMAT "DELETE FROM route_table " \
                           "WHERE id == %d;"
 // *** SQLite 语句组结尾 *** //
@@ -53,8 +57,8 @@ static char *ID_POOL;       // ID池
 static int id_cur;          // ID池游标
 static sqlite3 *rdb = NULL; // route表
 static sem_t mutex_id;      // id池互斥锁
-static sem_t mutex_route;   // route互斥锁
 static char *c_errmesg;     // 公用SQLite错误收集变量
+static int idpool_mode;     // id表存储模式 0表示手动更新 1表示自动更新
 
 // 路由表和ID统一初始化
 void route_id_init(void)
@@ -65,8 +69,7 @@ void route_id_init(void)
     ID_POOL = (char *)malloc(sizeof(char) * (size + 1)); // 无需释放常驻内存
     id_cur = ID_BYTE_BEGING;
     // 初始化无名信号量互斥锁
-    ret = sem_init(&mutex_id, 0, 1);    // id信号量
-    ret = sem_init(&mutex_route, 0, 1); // route信号量
+    ret = sem_init(&mutex_id, 0, 1); // id信号量
     // 路由表和ID初始化
     idpool_init();
     route_init();
@@ -105,6 +108,7 @@ void idpool_init(void)
         fscanf(ifp, "%d:%s", &id_cur, ID_POOL);
     }
     fclose(ifp);
+    idpool_mode = 1; // 自动更新idpool文件
 }
 
 // 重置id池
@@ -151,8 +155,9 @@ int id_Alloca(void)
             break;
         }
     }
-    idpool_Save();
     sem_post(&mutex_id);
+    if (idpool_mode)
+        idpool_Save();
     return i;
 }
 
@@ -171,7 +176,8 @@ void id_Release(int id)
     {
         ID_POOL[id] = ID_FREE;
     }
-    idpool_Save();
+    if (idpool_mode)
+        idpool_Save();
 }
 
 // id池文件更新
@@ -293,7 +299,6 @@ int route_march(int id, Routetable *route)
     {
         if (nRow == 0)
         {
-            id_Release(id);
             ret = 0x0307;
         }
         else
@@ -359,13 +364,14 @@ int route_update(int id, int sta)
 }
 
 // 表的维护
+// 查询超时记录
 // @param
 // @return 返回值：0:正常; 0x0305:SQL语句执行出错
 int route_maintain(void)
 {
     int ret;
-    char sql[100];
-    sprintf(sql, SQL_MAINTAIN_FORMAT, get_time());
+    char sql[200];
+    sprintf(sql, SQL_MAINTAIN_FORMAT, get_time(), get_time());
     ret = sqlite3_exec(rdb, sql, NULL, NULL, &c_errmesg);
     if (ret != SQLITE_OK)
     {
@@ -377,5 +383,25 @@ int route_maintain(void)
         ret = 0;
     }
     sqlite3_free(c_errmesg);
-    return 0;
+    return ret;
+}
+
+// idpool/route资源回收函数
+void route_recover(void)
+{
+    char *sql = "SELECT id FROM route_table "
+                "WHERE dtype == 3;";
+    char **pResult;
+    char *errmsg;
+    int nRow, nCol, ret, i;
+    ret = sqlite3_get_table(rdb, sql, &pResult, &nRow, &nCol, &errmsg);
+    if (ret == SQLITE_OK && nRow != 0)
+    {
+        for (i = 0; i < nRow; i++)
+        {
+            route_release(atoi(pResult[i + 1]));
+        }
+    }
+    sqlite3_free(errmsg);
+    sqlite3_free_table(pResult);
 }

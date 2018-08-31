@@ -58,9 +58,11 @@ int main()
     route_march(id[2], &routetable);
     printf("route_table : %ld , %ld\n", routetable.last_time, routetable.reg_time);
 
-    // 表维护测试
+    // 表维护测试 PASS
     ret = route_maintain();
     printf("route_maintain ret : %d \n", ret);
 
+    route_recover();
+    printf("TEST FINISHED\n");
     return 0;
 }

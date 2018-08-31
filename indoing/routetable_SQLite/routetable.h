@@ -53,4 +53,6 @@ void route_release(int id);
 int route_update(int id, int sta);
 int route_maintain(void);
 
+void route_recover(void);
+
 #endif
