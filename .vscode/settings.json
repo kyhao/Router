@@ -14,7 +14,8 @@
         "xlocnum": "cpp",
         "mac.h": "c",
         "wrap.h": "c",
-        "usbctl.h": "c"
+        "usbctl.h": "c",
+        "time.h": "c"
     },
     "files.autoSave": "afterDelay",
     "C_Cpp.errorSquiggles": "Disabled",

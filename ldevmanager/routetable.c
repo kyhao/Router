@@ -9,7 +9,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include <sqlite3.h>
 #include <semaphore.h> // Posix标准信号量 pthread库
 #include "routetable.h"
@@ -50,8 +49,6 @@
 #define SQL_DELETE_FORMAT "DELETE FROM route_table " \
                           "WHERE id == %d;"
 // *** SQLite 语句组结尾 *** //
-
-#define get_time() time(NULL) // 获取当前时间距离1970-01-01的秒数
 
 static char *ID_POOL;       // ID池
 static int id_cur;          // ID池游标

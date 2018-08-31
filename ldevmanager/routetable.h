@@ -9,6 +9,8 @@
 // $make
 // $make install
 
+#include <time.h>
+
 #ifndef _ROUTETABLE_H_
 #define _ROUTETABLE_H_
 
@@ -24,6 +26,8 @@
 #define DEV_STA_ACTIVE 0x01
 #define DEV_STA_OUTTIME 0x02
 #define DEV_STA_MAYBEDEAD 0x03
+
+#define get_time() time(NULL) // 获取当前时间距离1970-01-01的秒数
 
 // 路由表数据结构
 typedef struct _Routetable
