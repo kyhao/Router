@@ -1,12 +1,14 @@
-// Last Modify 2018/8/30
-// 路由表与ID管理程序
-// 使用SQLite数据库 需要有SQLite支持,下面为安装方法
+// ROUTETABLE_H
+// 路由表和ID池管理模块
+// 采用POSIX标准信号量 -lpthread
+// 采用SQLite 需要有SQLite支持 -lsqlite3
+// 下面为安装方法
 // $tar xvfz sqlite-autoconf-***.tar.gz
 // $cd sqlite-autoconf-***
 // $./configure --prefix=/usr/local
 // $make
 // $make install
-// 
+
 #ifndef _ROUTETABLE_H_
 #define _ROUTETABLE_H_
 
@@ -29,25 +31,26 @@ typedef struct _Routetable
     int id;
     int dtype;
     int stat;
-    time_t reg_time;
-    time_t last_time;
+    long reg_time;
+    long last_time;
 } Routetable;
 
+// 模块初始化函数
 void route_id_init(void);
 
-// ID管理
-int idpool_init(void);
+// ID管理函数组
+void idpool_init(void);
+void idpool_rest(void);
 int id_Alloca(void);
-int id_Release(int id);
-int id_Update(void);
+void id_Release(int id);
+void idpool_Save(void);
 
-// 路由表管理
+// 路由表管理函数组
 int route_init(void);
 int route_join(int id, int type);
-int route_march(int id, int *type);
-int route_release(int id);
-int route_modify(int id, int sta, int dtype);
+int route_march(int id, Routetable *type);
+void route_release(int id);
+int route_update(int id, int sta);
 int route_maintain(void);
-int route_update(void);
 
 #endif

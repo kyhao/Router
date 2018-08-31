@@ -53,7 +53,6 @@ static char *ID_POOL;       // ID池
 static int id_cur;          // ID池游标
 static sqlite3 *rdb = NULL; // route表
 static sem_t mutex_id;      // id池互斥锁
-static sem_t mutex_route;   // route互斥锁
 static char *c_errmesg;     // 公用SQLite错误收集变量
 
 // 路由表和ID统一初始化
@@ -152,6 +151,7 @@ int id_Alloca(void)
         }
     }
     sem_post(&mutex_id);
+    idpool_Save();
     return i;
 }
 
@@ -170,6 +170,7 @@ void id_Release(int id)
     {
         ID_POOL[id] = ID_FREE;
     }
+    idpool_Save();
 }
 
 // id池文件更新
@@ -291,6 +292,7 @@ int route_march(int id, Routetable *route)
     {
         if (nRow == 0)
         {
+            id_Release(id);
             ret = 0x0307;
         }
         else
@@ -322,6 +324,7 @@ void route_release(int id)
     sprintf(sql, SQL_DELETE_FORMAT, id);
     sqlite3_exec(rdb, sql, NULL, NULL, &c_errmesg);
     sqlite3_free(c_errmesg);
+    id_Release(id);
 }
 
 // 表的状态和设备接口更新(可更新，优化性能)
