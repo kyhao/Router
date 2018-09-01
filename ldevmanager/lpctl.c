@@ -171,9 +171,9 @@ int type_synctime(Packet *packet, int dfd)
         packet_ret.data[13] = '0'; // 周期时间需太高‘0’
         packet_ret.data[14] = '0';
         packet_ret.data[15] = '0';
-        packet_ret.data[16] = '0';
-        packet_ret.data[17] = 0x3C + '0';
-        packet_ret.data[18] = 0x0A;
+        packet_ret.data[16] = 0x0E + '0';
+        packet_ret.data[17] = 0x10 + '0';
+        packet_ret.data[18] = 0x3C;
         printf("data: %s\n", packet_ret.data);
         lprotocol_package(&packet_ret, tx_buf, &len, LPROROCOL_VER1);
         packet1_show(len, tx_buf, "_output_package : ");
