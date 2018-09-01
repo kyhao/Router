@@ -163,16 +163,20 @@ int type_synctime(Packet *packet, int dfd)
         packet_ret.header.sid = router_id;
         packet_ret.header.did = packet->header.sid;
         packet_ret.header.type = TYPE_SYNCTIME_ACK;
-        packet_ret.header.datalen = 0x15;
-        strftime(packet_ret.data, 15, "%Y%m%d%H%M%S%w", t);
-        packet_ret.data[15] = 0;
-        packet_ret.data[16] = 0;
-        packet_ret.data[17] = 0;
-        packet_ret.data[18] = 0;
-        packet_ret.data[19] = 0x3C;
-        packet_ret.data[20] = 0x0A;
-        packet1_show(21, packet_ret.data, "_output_data : ");
+        packet_ret.header.datalen = 0x13;
+        strftime(packet_ret.data, 13, "%y%m%d%H%M%S%w", t);
+        packet_ret.data[10] = '1';
+        packet_ret.data[11] = '0';
+        packet_ret.data[12] = '5';
+        packet_ret.data[13] = '0'; // 周期时间需太高‘0’
+        packet_ret.data[14] = '0';
+        packet_ret.data[15] = '0';
+        packet_ret.data[16] = '0';
+        packet_ret.data[17] = 0x3C + '0';
+        packet_ret.data[18] = 0x0A;
+        printf("data: %s\n", packet_ret.data);
         lprotocol_package(&packet_ret, tx_buf, &len, LPROROCOL_VER1);
+        packet1_show(len, tx_buf, "_output_package : ");
         write(packet->dev, tx_buf, len);
         return 0;
     }
@@ -190,6 +194,7 @@ int lpctl(char *in_buf, int dfd)
     ret = lprotocol_decode(in_buf, &packet);
     if (ret != 0)
     {
+        write(dfd, "AT+RST\r\n", 8); // 测试用 注意删除
         return ret;
     }
     packet.dev = dfd;
