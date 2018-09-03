@@ -20,17 +20,14 @@ bluetooth.o: driver/bluetooth.c
 lora.o: driver/lora.c
 	$(CC) -c driver/lora.c
 
-localProtocol.o : localProtocol.c
-	$(CC) -c localProtocol.c
+localProtocol.o : modules/localProtocol.c
+	$(CC) -c modules/localProtocol.c
 
 lpctl.o : lpctl.c
 	$(CC) -c lpctl.c
 
-routetable.o : routetable.c
-	$(CC) -c routetable.c -lsqlite3 -lpthread
-
-wrap.o:	../wanmanager/wrap.c
-	$(CC) -c ../wanmanager/wrap.c
+routetable.o : modules/routetable.c
+	$(CC) -c modules/routetable.c -lsqlite3 -lpthread
 
 .PHONY:clean
 clean :

@@ -8,8 +8,8 @@
 #include <time.h>
 #include <fcntl.h> //
 #include "lpctl.h"
-#include "localProtocol.h"
-#include "routetable.h"
+#include "modules/localProtocol.h"
+#include "modules/routetable.h"
 
 // 测试阶段使用宏定义 注意后期修改为 由配置文件读取
 #define ROUTER_ID 0xCCCC
