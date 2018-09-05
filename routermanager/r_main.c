@@ -34,6 +34,7 @@ int main(int argc, char **argv)
                 // FIXME: DEBUG:
                 int j;
                 printf("GET_FORM_LDEV: ");
+
                 for (j = 0; j < ret; j++)
                 {
                     printf("\033[33m%02X \033[0m", rx_buf[j]);
