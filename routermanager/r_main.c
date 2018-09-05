@@ -13,11 +13,7 @@
 
 int main(int argc, char **argv)
 {
-    printf("r_main_argc:->%d\n", argc);
-
     fd_set fdset;
-    int ret;
-    char rx_buf[RX_SIZE]; // 接收缓存大小
 
     while (1)
     {
@@ -29,18 +25,7 @@ int main(int argc, char **argv)
             // 监测是否有来自硬件端协议传输
             if (FD_ISSET(pfd_in, &fdset))
             {
-                ret = read(pfd_in, rx_buf, 100);
-
-                // FIXME: DEBUG:
-                int j;
-                printf("GET_FORM_LDEV: ");
-
-                for (j = 0; j < ret; j++)
-                {
-                    printf("\033[33m%02X \033[0m", rx_buf[j]);
-                }
-                printf("\n");
-                write(pfd_out, "AAAAAA", 5);
+                
             }
         }
     }
